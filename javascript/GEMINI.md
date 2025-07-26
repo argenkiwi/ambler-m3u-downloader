@@ -15,14 +15,16 @@ For example, a simple counter application might have the following stages:
 
 ## 2. Define Nodes
 
-Create an `object`, typically named `Node`, to define these stages as constants.
+Create a single `object`, typically named `Node`, at the top level of your application (e.g., in `nodes.js` or `main.js`) to define these stages as constants.
 
 ```javascript
+// nodes.js
 const Node = {
     START: 1,
     STEP: 2,
     STOP: 3,
 };
+module.exports = Node;
 ```
 
 ## 3. Determine Shared State
@@ -35,24 +37,24 @@ In the counter example, the state is a number representing the current count.
 
 For each node, create a corresponding function that takes the current `state` as a parameter. Each function should return an `Array` containing:
 1. The (potentially modified) `state`.
-2. A value that will be used to decide which node to go to next. This can be `null` if there's only one possible next step.
+2. A value that will be used by the `direct` function to decide which node to go to next. This value should NOT be a direct reference to another `Node`.
 
 ```javascript
 function start(state) {
     console.log("Let's count...");
-    return [state, null];
+    return [state, null]; // No direct node reference
 }
 
 function step(state) {
     const count = state + 1;
     console.log(`...${count}...`);
-    // Return a boolean to decide whether to continue
+    // Return a boolean to decide whether to continue, not a Node
     return [count, Math.random() < 0.5];
 }
 
 function stop(state) {
     console.log("...stop.");
-    return [state, null];
+    return [state, null]; // No direct node reference
 }
 ```
 
@@ -62,10 +64,11 @@ This function acts as the central router for your application. It takes the curr
 
 The `resolve` function takes two arguments:
 1. The result of calling the appropriate node function (the `[state, value]` array).
-2. A function that takes the `value` from the node function's result and returns the next `Node` to execute.
+2. A function that takes the `value` from the node function's result and returns the next `Node` to execute. This is where all routing logic should reside; node functions themselves should not contain direct references to other nodes.
 
 ```javascript
 const { resolve } = require('./ambler');
+const Node = require('./nodes'); // Import the centralized Node definition
 
 async function direct(state, node) {
     if (node === Node.START) {
