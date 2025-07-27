@@ -1,7 +1,5 @@
 const fs = require('fs');
 
-const Node = require('../nodes');
-
 async function readM3UFile(state) {
     const filePath = state.m3u_file_path;
     const fileContent = fs.readFileSync(filePath, 'utf-8');
@@ -17,7 +15,7 @@ async function readM3UFile(state) {
 
     state.urls = urls;
     console.log(`Found ${urls.length} URLs in the M3U file.`);
-    return [state, Node.PROMPT_OPTIONS];
+    return state;
 }
 
 module.exports = readM3UFile;

@@ -10,4 +10,4 @@ def check_m3u_file(state):
             print("Invalid file path. Please provide a valid .m3u file.")
         m3u_file = input('Please select an m3u file: ')
     state.m3u_file = m3u_file
-    return state, None
+    return state

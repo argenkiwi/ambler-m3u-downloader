@@ -47,7 +47,7 @@ def direct(state: AppState, node: int) -> tuple[AppState, int | None]:
     elif node == Node.DOWNLOAD_FILES:
         return resolve(download_files(state), lambda _: None)
 
-def main():
+async def main():
     initial_m3u_file = None
     if len(sys.argv) > 1:
         initial_m3u_file = sys.argv[1]
@@ -55,8 +55,8 @@ def main():
     initial_state = AppState(m3u_file=initial_m3u_file)
     start_node = Node.CHECK_M3U_FILE
 
-    amble(initial_state, start_node, direct)
+    await amble(initial_state, start_node, direct)
     print("Application finished.")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

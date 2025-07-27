@@ -1,5 +1,3 @@
-const Node = require('../nodes');
-
 const resolveKhinsiderUrl = require('../utils/resolve_khinsider_url');
 
 async function resolveUrls(state) {
@@ -19,7 +17,7 @@ async function resolveUrls(state) {
         }
     }));
     state.urls = resolvedUrls;
-    return [state, Node.SAVE_M3U_FILE];
+    return state;
 }
 
 module.exports = resolveUrls;

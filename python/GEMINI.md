@@ -38,53 +38,50 @@ For each node, create a corresponding function that takes the current `state` as
 
 ```python
 import random
+import asyncio
+
+class Node:
+    START = 1
+    STEP = 2
+    STOP = 3
 
 def start(state):
     print("Let's count...")
-    return state, None
+    return state, Node.STEP
 
-def step(state):
+async def step(state):
     count = state + 1
+    await asyncio.sleep(1)
     print(f"...{count}...")
     # Return a boolean to decide whether to continue
-    return count, random.choice([True, False])
+    return count, Node.STEP if random.choice([True, False]) else Node.STOP
 
 def stop(state):
     print("...stop.")
     return state, None
 ```
 
-## 5. Create the `direct` Function
+## 5. Start the Application
 
-This function acts as the central router for your application. It takes the current `state` and `node` as input and uses the `resolve` function to determine the next step.
-
-The `resolve` function takes two arguments:
-1. The result of calling the appropriate node function (the `(state, value)` tuple).
-2. A lambda function that takes the `value` from the node function's result and returns the next `Node` to execute.
-
-```python
-from ambler import resolve
-
-def direct(state, node):
-    if node == Node.START:
-        # After 'start', always go to 'STEP'
-        return resolve(start(state), lambda _: Node.STEP)
-    elif node == Node.STEP:
-        # After 'step', check the boolean to either loop or stop
-        return resolve(step(state), lambda should_continue: Node.STEP if should_continue else Node.STOP)
-    elif node == Node.STOP:
-        # 'stop' is the final node, so we return None
-        return resolve(stop(state), lambda _: None)
-```
-
-## 6. Start the Application
-
-Finally, in your main execution block, call the `amble` function, passing the initial state, the starting node, and a reference to your `direct` function.
+Finally, in your main execution block, call the `amble` function, passing the initial state, the starting node, and a `step` function. This function acts as the central router for your application. It takes the current `state` and `Node` as input, calls the appropriate node function and returns the updated state and the next `Node` to be called.
 
 ```python
 from ambler import amble
+import asyncio
+
+# ... (Node definitions and functions)
+
+async def direct(state, node):
+    if node == Node.START:
+        return start(state)
+    elif node == Node.STEP:
+        return await step(state)
+    elif node == Node.STOP:
+        return stop(state)
+
+async def main():
+    await amble(0, Node.START, direct)
 
 if __name__ == "__main__":
-    # Start with an initial state of 0 at the START node
-    amble(0, Node.START, direct)
+    asyncio.run(main())
 ```

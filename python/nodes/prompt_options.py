@@ -1,4 +1,4 @@
-def prompt_options(state):
+async def prompt_options(state):
     """
     Presents the user with available actions and returns their selection.
     """
@@ -29,6 +29,6 @@ def prompt_options(state):
             print("Invalid choice. Please try again.")
 
     if selected_option == 'quit':
-        return state, None
+        return None
 
-    return state, selected_option
+    return selected_option

@@ -4,4 +4,3 @@ def list_urls(state):
     """
     for url in state.urls:
         print(url)
-    return state, None

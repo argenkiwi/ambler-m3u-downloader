@@ -1,8 +1,6 @@
 const path = require('path');
 const downloadFile = require('../utils/download_files');
 
-const Node = require('../nodes');
-
 async function downloadFiles(state) {
     console.log("Downloading files...");
     const outputFolderName = path.basename(state.m3u_file_path, '.m3u');
@@ -17,7 +15,7 @@ async function downloadFiles(state) {
     }));
 
     console.log("All downloads complete.");
-    return [state, null]; // Terminate the program
+    return state;
 }
 
 module.exports = downloadFiles;

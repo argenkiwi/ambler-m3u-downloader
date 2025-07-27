@@ -1,7 +1,7 @@
 from utils.resolve_khinsider_url import resolve_khinsider_url
 import asyncio
 
-def resolve_urls(state):
+async def resolve_urls(state):
     """
     Resolves khinsider.com URLs to direct download links.
     """
@@ -19,7 +19,7 @@ def resolve_urls(state):
         return await asyncio.gather(*tasks)
 
     print("Resolving URLs...")
-    resolved_urls = asyncio.run(run_resolver())
+    resolved_urls = await run_resolver()
     state.urls = resolved_urls
     print("URLs resolved.")
-    return state, None
+    return state

@@ -15,16 +15,14 @@ For example, a simple counter application might have the following stages:
 
 ## 2. Define Nodes
 
-Create a single `object`, typically named `Node`, at the top level of your application (e.g., in `nodes.js` or `main.js`) to define these stages as constants.
+Create an `object`, typically named `Node`, to define these stages as constants.
 
 ```javascript
-// nodes.js
 const Node = {
     START: 1,
     STEP: 2,
     STOP: 3,
 };
-module.exports = Node;
 ```
 
 ## 3. Determine Shared State
@@ -37,62 +35,53 @@ In the counter example, the state is a number representing the current count.
 
 For each node, create a corresponding function that takes the current `state` as a parameter. Each function should return an `Array` containing:
 1. The (potentially modified) `state`.
-2. A value that will be used by the `direct` function to decide which node to go to next. This value should NOT be a direct reference to another `Node`.
+2. A value that will be used to decide which node to go to next. This can be `null` if there's only one possible next step.
 
 ```javascript
+const Node = {
+    START: 1,
+    STEP: 2,
+    STOP: 3,
+};
+
 function start(state) {
     console.log("Let's count...");
-    return [state, null]; // No direct node reference
+    return [state, Node.STEP];
 }
 
-function step(state) {
+async function step(state) {
     const count = state + 1;
+    await new Promise(resolve => setTimeout(resolve, 1000));
     console.log(`...${count}...`);
-    // Return a boolean to decide whether to continue, not a Node
-    return [count, Math.random() < 0.5];
+    return [count, Math.random() < 0.5 ? Node.STEP : Node.STOP];
 }
 
 function stop(state) {
     console.log("...stop.");
-    return [state, null]; // No direct node reference
+    return [state, null];
 }
 ```
 
-## 5. Create the `direct` Function
+## 5. Start the Application
 
-This function acts as the central router for your application. It takes the current `state` and `node` as input and uses the `resolve` function to determine the next step.
-
-The `resolve` function takes two arguments:
-1. The result of calling the appropriate node function (the `[state, value]` array).
-2. A function that takes the `value` from the node function's result and returns the next `Node` to execute. This is where all routing logic should reside; node functions themselves should not contain direct references to other nodes.
-
-```javascript
-const { resolve } = require('./ambler');
-const Node = require('./nodes'); // Import the centralized Node definition
-
-async function direct(state, node) {
-    if (node === Node.START) {
-        // After 'start', always go to 'STEP'
-        return resolve(start(state), (_) => Node.STEP);
-    } else if (node === Node.STEP) {
-        // After 'step', check the boolean to either loop or stop
-        return resolve(step(state), (shouldContinue) => (shouldContinue ? Node.STEP : Node.STOP));
-    } else if (node === Node.STOP) {
-        // 'stop' is the final node, so we return null
-        return resolve(stop(state), (_) => null);
-    }
-}
-```
-
-## 6. Start the Application
-
-Finally, in your main execution block, call the `amble` function, passing the initial state, the starting node, and a reference to your `direct` function.
+Finally, in your main execution block, call the `amble` function, passing the initial state, the starting node, and a `step` function. This function acts as the central router for your application. It takes the current `state` and `Node` as input, calls the appropriate node function and returns the updated state and the next `Node` to be called.
 
 ```javascript
 const { amble } = require('./ambler');
 
+// ... (Node definitions and functions)
+
+async function direct(state, node) {
+    if (node === Node.START) {
+        return start(state);
+    } else if (node === Node.STEP) {
+        return await step(state);
+    } else if (node === Node.STOP) {
+        return stop(state);
+    }
+}
+
 (async () => {
-    // Start with an initial state of 0 at the START node
     await amble(0, Node.START, direct);
 })();
 ```

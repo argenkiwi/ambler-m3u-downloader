@@ -1,15 +1,12 @@
-function resolve(result, direct) {
-    const [state, action] = result;
-    return [state, direct(action)];
-}
-
-async function amble(state, edge, follow) {
+async function amble(state, node, step) {
+    let currentNode = node;
     let currentState = state;
-    let currentEdge = edge;
-    while (currentEdge) {
-        [currentState, currentEdge] = await follow(currentState, currentEdge);
+
+    while (currentNode) {
+        [currentState, currentNode] = await step(currentState, currentNode);
     }
+
     return [currentState, null];
 }
 
-module.exports = { amble, resolve };
+module.exports = { amble };
