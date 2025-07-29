@@ -1,5 +1,6 @@
 import os
 
+
 def check_m3u_file(state):
     """
     Checks if an M3U file path is valid, prompting the user if not.

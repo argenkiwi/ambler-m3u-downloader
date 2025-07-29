@@ -1,6 +1,6 @@
-
 import aiohttp
 from bs4 import BeautifulSoup
+
 
 async def resolve_khinsider_url(url):
     if not url.startswith('https://downloads.khinsider.com/game-soundtracks'):

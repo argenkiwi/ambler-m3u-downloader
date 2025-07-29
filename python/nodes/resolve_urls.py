@@ -1,5 +1,7 @@
-from utils.resolve_khinsider_url import resolve_khinsider_url
 import asyncio
+
+from utils.resolve_khinsider_url import resolve_khinsider_url
+
 
 async def resolve_urls(state):
     """
@@ -15,6 +17,7 @@ async def resolve_urls(state):
             else:
                 async def return_url(u):
                     return u
+
                 tasks.append(return_url(url))
         return await asyncio.gather(*tasks)
 

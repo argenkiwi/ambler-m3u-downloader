@@ -1,13 +1,14 @@
 import sys
-from ambler import amble, resolve
 
+from ambler import amble, resolve
 from nodes.check_m3u_file import check_m3u_file
-from nodes.read_m3u_file import read_m3u_file
-from nodes.prompt_options import prompt_options
-from nodes.list_urls import list_urls
-from nodes.resolve_urls import resolve_urls
 from nodes.download_files import download_files
+from nodes.list_urls import list_urls
+from nodes.prompt_options import prompt_options
+from nodes.read_m3u_file import read_m3u_file
+from nodes.resolve_urls import resolve_urls
 from nodes.save_m3u_file import save_m3u_file
+
 
 class Node:
     CHECK_M3U_FILE = 1
@@ -18,6 +19,7 @@ class Node:
     SAVE_M3U_FILE = 6
     DOWNLOAD_FILES = 7
 
+
 class AppState:
     def __init__(self, m3u_file=None, urls=None):
         self.m3u_file = m3u_file
@@ -25,6 +27,7 @@ class AppState:
 
     def __repr__(self):
         return f"AppState(m3u_file={self.m3u_file}, urls_count={len(self.urls)})"
+
 
 def direct(state: AppState, node: int) -> tuple[AppState, int | None]:
     if node == Node.CHECK_M3U_FILE:
@@ -47,6 +50,7 @@ def direct(state: AppState, node: int) -> tuple[AppState, int | None]:
     elif node == Node.DOWNLOAD_FILES:
         return resolve(download_files(state), lambda _: None)
 
+
 async def main():
     initial_m3u_file = None
     if len(sys.argv) > 1:
@@ -57,6 +61,7 @@ async def main():
 
     await amble(initial_state, start_node, direct)
     print("Application finished.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

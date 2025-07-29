@@ -1,6 +1,7 @@
-
 import os
+
 import aiohttp
+
 
 async def download_file(url, output_folder):
     if not os.path.exists(output_folder):

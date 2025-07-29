@@ -6,5 +6,3 @@ def save_m3u_file(state):
         for url in state.urls:
             f.write(url + '\n')
     print(f"Resolved URLs saved to {state.m3u_file}")
-
-

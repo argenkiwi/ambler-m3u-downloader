@@ -1,5 +1,3 @@
-import asyncio
-
 async def amble(state, node, step):
     current_state = state
     current_node = node
