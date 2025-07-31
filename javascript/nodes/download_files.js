@@ -1,7 +1,7 @@
-const path = require('path');
-const downloadFile = require('../utils/download_files');
+import path from 'path';
+import { downloadFile } from '../utils/download_files.js';
 
-async function downloadFiles(state) {
+export async function downloadFiles(state) {
     console.log("Downloading files...");
     const outputFolderName = path.basename(state.m3u_file_path, '.m3u');
 
@@ -15,7 +15,5 @@ async function downloadFiles(state) {
     }));
 
     console.log("All downloads complete.");
-    return state;
+    return null;
 }
-
-module.exports = downloadFiles;

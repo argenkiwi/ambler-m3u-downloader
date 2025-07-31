@@ -1,7 +1,7 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
-async function resolveKhinsiderUrl(url) {
+export async function resolveKhinsiderUrl(url) {
     try {
         const response = await axios.get(url);
         const $ = cheerio.load(response.data);
@@ -15,5 +15,3 @@ async function resolveKhinsiderUrl(url) {
         throw new Error(`Failed to resolve Khinsider URL: ${error.message}`);
     }
 }
-
-module.exports = resolveKhinsiderUrl;

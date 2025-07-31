@@ -1,6 +1,8 @@
-const fs = require('fs');
+import fs from 'fs';
+import { Next } from '../ambler.js';
+import { nodes } from '../nodes.js';
 
-async function readM3UFile(state) {
+export async function readM3UFile(state) {
     const filePath = state.m3u_file_path;
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const lines = fileContent.split('\n');
@@ -15,7 +17,5 @@ async function readM3UFile(state) {
 
     state.urls = urls;
     console.log(`Found ${urls.length} URLs in the M3U file.`);
-    return state;
+    return new Next(nodes.promptOptions, state);
 }
-
-module.exports = readM3UFile;

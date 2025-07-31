@@ -1,6 +1,8 @@
-const readline = require('readline');
+import readline from 'readline';
+import { Next } from '../ambler.js';
+import { nodes } from '../nodes.js';
 
-async function promptOptions(state) {
+export async function promptOptions(state) {
     const hasKhinsiderUrls = state.urls.some(url => url.startsWith("https://downloads.khinsider.com/game-soundtracks"));
 
     let options = [
@@ -40,7 +42,13 @@ async function promptOptions(state) {
     }
     
     rl.close();
-    return options[choice - 1].value;
-}
 
-module.exports = promptOptions;
+    const nextNode = {
+        'list': nodes.listUrls,
+        'resolve': nodes.resolveUrls,
+        'download': nodes.downloadFiles,
+        'quit': null
+    }[options[choice - 1].value];
+
+    return nextNode ? new Next(nextNode, state) : null;
+}

@@ -1,6 +1,8 @@
-const resolveKhinsiderUrl = require('../utils/resolve_khinsider_url');
+import { resolveKhinsiderUrl } from '../utils/resolve_khinsider_url.js';
+import { Next } from '../ambler.js';
+import { nodes } from '../nodes.js';
 
-async function resolveUrls(state) {
+export async function resolveUrls(state) {
     console.log("Resolving Khinsider URLs...");
     const resolvedUrls = await Promise.all(state.urls.map(async (url) => {
         if (url.startsWith("https://downloads.khinsider.com/game-soundtracks")) {
@@ -17,7 +19,5 @@ async function resolveUrls(state) {
         }
     }));
     state.urls = resolvedUrls;
-    return state;
+    return new Next(nodes.saveM3UFile, state);
 }
-
-module.exports = resolveUrls;
