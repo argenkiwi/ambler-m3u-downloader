@@ -1,23 +1,9 @@
-import sys
+import os
+from typing import Optional
 
-from ambler import amble, resolve
-from nodes.check_m3u_file import check_m3u_file
-from nodes.download_files import download_files
-from nodes.list_urls import list_urls
-from nodes.prompt_options import prompt_options
-from nodes.read_m3u_file import read_m3u_file
-from nodes.resolve_urls import resolve_urls
-from nodes.save_m3u_file import save_m3u_file
-
-
-class Node:
-    CHECK_M3U_FILE = 1
-    READ_M3U_FILE = 2
-    PROMPT_OPTIONS = 3
-    LIST_URLS = 4
-    RESOLVE_URLS = 5
-    SAVE_M3U_FILE = 6
-    DOWNLOAD_FILES = 7
+from ambler import amble, Next
+from utils.download_files import download_file
+from utils.resolve_khinsider_url import resolve_khinsider_url
 
 
 class AppState:
@@ -29,27 +15,119 @@ class AppState:
         return f"AppState(m3u_file={self.m3u_file}, urls_count={len(self.urls)})"
 
 
-def direct(state: AppState, node: int) -> tuple[AppState, int | None]:
-    if node == Node.CHECK_M3U_FILE:
-        return resolve(check_m3u_file(state), lambda _: Node.READ_M3U_FILE)
-    elif node == Node.READ_M3U_FILE:
-        return resolve(read_m3u_file(state), lambda _: Node.PROMPT_OPTIONS)
-    elif node == Node.PROMPT_OPTIONS:
-        return resolve(prompt_options(state), lambda option: {
-            'list': Node.LIST_URLS,
-            'resolve': Node.RESOLVE_URLS,
-            'download': Node.DOWNLOAD_FILES,
-            'quit': None
-        }.get(option))
-    elif node == Node.LIST_URLS:
-        return resolve(list_urls(state), lambda _: Node.PROMPT_OPTIONS)
-    elif node == Node.RESOLVE_URLS:
-        return resolve(resolve_urls(state), lambda _: Node.SAVE_M3U_FILE)
-    elif node == Node.SAVE_M3U_FILE:
-        return resolve(save_m3u_file(state), lambda _: Node.PROMPT_OPTIONS)
-    elif node == Node.DOWNLOAD_FILES:
-        return resolve(download_files(state), lambda _: None)
+async def check_m3u_file(state) -> Next:
+    """
+    Checks if an M3U file path is valid, prompting the user if not.
+    """
+    m3u_file = state.m3u_file
+    while not m3u_file or not os.path.exists(m3u_file) or not os.path.isfile(m3u_file) or not m3u_file.endswith('.m3u'):
+        if m3u_file:
+            print("Invalid file path. Please provide a valid .m3u file.")
+        m3u_file = input('Please select an m3u file: ')
+    state.m3u_file = m3u_file
+    return Next(read_m3u_file, state)
 
+
+async def read_m3u_file(state) -> Next:
+    """
+    Reads the content of the M3U file and extracts URLs.
+    """
+    with open(state.m3u_file, 'r') as f:
+        urls = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+    state.urls = urls
+    return Next(prompt_options, state)
+
+
+async def prompt_options(state) -> Optional[Next]:
+    """
+    Presents the user with available actions and returns their selection.
+    """
+    urls = state.urls
+    options = ['quit', 'list']
+    can_resolve = any(url.startswith('https://downloads.khinsider.com/game-soundtracks') for url in urls)
+    if can_resolve:
+        options.append('resolve')
+    else:
+        options.append('download')
+
+    print('Please select an option:')
+    for option in options:
+        print(option)
+
+    selected_option = input('Enter your choice: ')
+    match selected_option:
+        case 'quit':
+            return None
+        case 'list':
+            return Next(list_urls, state)
+        case 'resolve':
+            return Next(resolve_urls, state)
+        case 'download':
+            return Next(download_files, state)
+        case _:
+            print("Invalid choice.")
+            return Next(prompt_options, state)
+
+
+async def list_urls(state) -> Next:
+    """
+    Displays all the URLs currently in the application's state.
+    """
+    for url in state.urls:
+        print(url)
+
+    return Next(prompt_options, state)
+
+
+async def resolve_urls(state) -> Next:
+    """
+    Resolves khinsider.com URLs to direct download links.
+    """
+    urls = state.urls
+
+    async def run_resolver():
+        tasks = []
+        for url in urls:
+            if url.startswith('https://downloads.khinsider.com/game-soundtracks'):
+                tasks.append(resolve_khinsider_url(url))
+            else:
+                async def return_url(u):
+                    return u
+
+                tasks.append(return_url(url))
+        return await asyncio.gather(*tasks)
+
+    print("Resolving URLs...")
+    resolved_urls = await run_resolver()
+    state.urls = resolved_urls
+    print("URLs resolved.")
+    return Next(save_m3u_file, state)
+
+
+async def download_files(state) -> Next:
+    """
+    Downloads all URLs in the application's state.
+    """
+    urls = state.urls
+    m3u_file_name = os.path.splitext(os.path.basename(state.m3u_file))[0]
+
+    async def run_downloader():
+        await asyncio.gather(*[download_file(url, m3u_file_name) for url in urls])
+
+    print(f"Starting download of {len(urls)} files...")
+    await run_downloader()
+    print("All files downloaded.")
+    return Next(prompt_options, state)
+
+async def save_m3u_file(state) -> Next:
+    """
+    Saves the resolved URLs back to the M3U file.
+    """
+    with open(state.m3u_file, 'w') as f:
+        for url in state.urls:
+            f.write(url + '\n')
+    print(f"Resolved URLs saved to {state.m3u_file}")
+    return Next(prompt_options, state)
 
 async def main():
     initial_m3u_file = None
@@ -57,11 +135,13 @@ async def main():
         initial_m3u_file = sys.argv[1]
 
     initial_state = AppState(m3u_file=initial_m3u_file)
-    start_node = Node.CHECK_M3U_FILE
 
-    await amble(initial_state, start_node, direct)
+    await amble(check_m3u_file, initial_state)
     print("Application finished.")
 
 
 if __name__ == "__main__":
+    import asyncio
+    import sys
+
     asyncio.run(main())
