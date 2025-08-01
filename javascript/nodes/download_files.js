@@ -1,19 +1,14 @@
-import path from 'path';
+import { Next } from '../ambler.js';
+import { promptOptions } from './prompt_options.js';
 import { downloadFile } from '../utils/download_files.js';
+import path from 'path';
 
 export async function downloadFiles(state) {
-    console.log("Downloading files...");
-    const outputFolderName = path.basename(state.m3u_file_path, '.m3u');
+    const outputFolder = path.basename(state.m3uFilePath, '.m3u');
+    console.log(`Downloading to ${outputFolder} folder...`);
 
-    await Promise.all(state.urls.map(async (url) => {
-        try {
-            await downloadFile(url, outputFolderName);
-            console.log(`Downloaded: ${url}`);
-        } catch (error) {
-            console.error(`Error downloading ${url}: ${error.message}`);
-        }
-    }));
+    await Promise.all(state.urls.map(url => downloadFile(url, outputFolder)));
 
-    console.log("All downloads complete.");
-    return null;
+    console.log("All files downloaded.");
+    return new Next(promptOptions, state);
 }

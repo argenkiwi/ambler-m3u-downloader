@@ -1,31 +1,32 @@
-import fs from 'fs';
-import path from 'path';
-import readline from 'readline';
 import { Next } from '../ambler.js';
-import { nodes } from '../nodes.js';
+import { readM3UFile } from './read_m3u_file.js';
+import fs from 'fs';
+import readline from 'readline';
 
 export async function checkM3UFile(state) {
-  let m3u_file_path = state.m3u_file_path;
-  const isValidM3U = (filePath) => {
-    return fs.existsSync(filePath) && fs.statSync(filePath).isFile() && path.extname(filePath).toLowerCase() === '.m3u';
-  };
+    let m3uFilePath = state.m3uFilePath;
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  while (!isValidM3U(m3u_file_path)) {
-    console.log("\nInvalid M3U file path provided or file does not exist.");
-    m3u_file_path = await new Promise(resolve => {
-      rl.question("Please enter the path to the M3U file: ", answer => {
-        resolve(answer);
-      });
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
     });
-  }
 
-  rl.close();
-  state.m3u_file_path = m3u_file_path;
-  console.log(`Using M3U file: ${state.m3u_file_path}`);
-  return new Next(nodes.readM3UFile, state);
+    function askForPath() {
+        return new Promise((resolve) => {
+            rl.question('Please select an m3u file: ', (answer) => {
+                resolve(answer);
+            });
+        });
+    }
+
+    while (!m3uFilePath || !fs.existsSync(m3uFilePath) || !fs.statSync(m3uFilePath).isFile() || !m3uFilePath.endsWith('.m3u')) {
+        if (m3uFilePath) {
+            console.log("Invalid file path. Please provide a valid .m3u file.");
+        }
+        m3uFilePath = await askForPath();
+    }
+
+    rl.close();
+
+    return new Next(readM3UFile, { ...state, m3uFilePath });
 }

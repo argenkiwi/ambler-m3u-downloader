@@ -1,54 +1,50 @@
-import readline from 'readline';
 import { Next } from '../ambler.js';
-import { nodes } from '../nodes.js';
+import { listUrls } from './list_urls.js';
+import { resolveUrls } from './resolve_urls.js';
+import { downloadFiles } from './download_files.js';
+import readline from 'readline';
 
 export async function promptOptions(state) {
-    const hasKhinsiderUrls = state.urls.some(url => url.startsWith("https://downloads.khinsider.com/game-soundtracks"));
+    const urls = state.urls;
+    const options = ['quit', 'list'];
+    const canResolve = urls.some(url => url.startsWith('https://downloads.khinsider.com/game-soundtracks'));
 
-    let options = [
-        { name: "List URLs", value: 'list' },
-        { name: "Quit", value: 'quit' }
-    ];
-
-    if (hasKhinsiderUrls) {
-        options.splice(1, 0, { name: "Resolve Khinsider URLs", value: 'resolve' });
+    if (canResolve) {
+        options.push('resolve');
     } else {
-        options.splice(1, 0, { name: "Download Files", value: 'download' });
+        options.push('download');
     }
 
-    console.log("\nWhat would you like to do?");
-    options.forEach((option, index) => {
-        console.log(`${index + 1}. ${option.name}`);
-    });
+    console.log('Please select an option:');
+    options.forEach(option => console.log(option));
 
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
-    let choice;
-    while (true) {
-        choice = await new Promise(resolve => {
-            rl.question("Enter your choice: ", answer => {
-                resolve(parseInt(answer));
+    function askForChoice() {
+        return new Promise((resolve) => {
+            rl.question('Enter your choice: ', (answer) => {
+                resolve(answer);
             });
         });
-
-        if (choice > 0 && choice <= options.length) {
-            break;
-        } else {
-            console.log("Invalid choice. Please try again.");
-        }
     }
-    
+
+    const selectedOption = await askForChoice();
     rl.close();
 
-    const nextNode = {
-        'list': nodes.listUrls,
-        'resolve': nodes.resolveUrls,
-        'download': nodes.downloadFiles,
-        'quit': null
-    }[options[choice - 1].value];
-
-    return nextNode ? new Next(nextNode, state) : null;
+    switch (selectedOption) {
+        case 'quit':
+            return null;
+        case 'list':
+            return new Next(listUrls, state);
+        case 'resolve':
+            return new Next(resolveUrls, state);
+        case 'download':
+            return new Next(downloadFiles, state);
+        default:
+            console.log("Invalid choice.");
+            return new Next(promptOptions, state);
+    }
 }

@@ -6,7 +6,7 @@ import { resolveUrls } from './nodes/resolve_urls.js';
 import { saveM3UFile } from './nodes/save_m3u_file.js';
 import { downloadFiles } from './nodes/download_files.js';
 
-export const nodes = {
+export {
     checkM3UFile,
     readM3UFile,
     promptOptions,

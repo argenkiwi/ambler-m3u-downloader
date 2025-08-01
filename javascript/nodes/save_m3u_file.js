@@ -1,12 +1,9 @@
-import fs from 'fs';
 import { Next } from '../ambler.js';
-import { nodes } from '../nodes.js';
+import { promptOptions } from './prompt_options.js';
+import fs from 'fs';
 
 export async function saveM3UFile(state) {
-    const filePath = state.m3u_file_path;
-    const content = state.urls.join('\n');
-    fs.writeFileSync(filePath, content, 'utf-8');
-    console.log(`Saved resolved URLs to ${filePath}`);
-    return new Next(nodes.promptOptions, state);
+    fs.writeFileSync(state.m3uFilePath, state.urls.join('\n'));
+    console.log(`Resolved URLs saved to ${state.m3uFilePath}`);
+    return new Next(promptOptions, state);
 }
-
