@@ -1,7 +1,9 @@
-import { Node, State } from "../nodes.ts";
+import { Next } from "../ambler.ts";
+import { State } from "../state.ts";
 import { readLines } from "https://deno.land/std@0.224.0/io/mod.ts";
+import { readM3UFile } from "./read_m3u_file.ts";
 
-export async function checkM3UFile(state: State): Promise<[State, Node]> {
+export async function checkM3UFile(state: State): Promise<Next<State>> {
   let m3uFilePath = Deno.args[0];
 
   while (true) {
@@ -10,8 +12,8 @@ export async function checkM3UFile(state: State): Promise<[State, Node]> {
         const fileInfo = await Deno.stat(m3uFilePath);
         if (fileInfo.isFile && m3uFilePath.endsWith(".m3u")) {
           console.log(`Using M3U file: ${m3uFilePath}`);
-          return [{ ...state, m3uFilePath }, Node.READ_M3U_FILE];
-        }
+          return new Next(readM3UFile, { ...state, m3uFilePath });
+        } 
       } catch (error) {
         if (error instanceof Deno.errors.NotFound) {
           console.log(`File not found: ${m3uFilePath}`);

@@ -1,7 +1,9 @@
-import { Node, State } from "../nodes.ts";
+import { Next } from "../ambler.ts";
+import { State } from "../state.ts";
 import { resolveKhinsiderUrl } from "../utils/resolve_khinsider_url.ts";
-
-export async function resolveUrls(state: State): Promise<[State, Node]> {
+import { saveM3UFile } from "./save_m3u_file.ts";
+ 
+export async function resolveUrls(state: State): Promise<Next<State>> {
   console.log("Resolving Khinsider URLs...");
   const resolvedUrls = await Promise.all(state.urls.map(async (url) => {
     if (url.startsWith("https://downloads.khinsider.com/game-soundtracks")) {
@@ -11,5 +13,5 @@ export async function resolveUrls(state: State): Promise<[State, Node]> {
     }
   }));
   console.log("Finished resolving URLs.");
-  return [{ ...state, urls: resolvedUrls }, Node.SAVE_M3U_FILE];
+  return new Next(saveM3UFile, { ...state, urls: resolvedUrls });
 }

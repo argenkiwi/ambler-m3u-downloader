@@ -1,16 +1,16 @@
-export async function amble<S, N>(
-  state: S,
-  node: N,
-  step: (currentState: S, currentNode: N) => Promise<[S, N | null]>,
-): Promise<[S, N | null]> {
-  let currentState: S = state;
-  let currentNode: N | null = node;
+export type Nextable<S> = (state: S) => Promise<Next<S> | null>;
 
-  while (currentNode !== null) {
-    const [newState, nextNode] = await step(currentState, currentNode);
-    currentState = newState;
-    currentNode = nextNode;
-  }
+export class Next<S> {
+    constructor(private nextFunc: Nextable<S>, private state: S) {}
 
-  return [currentState, null];
+    run(): Promise<Next<S> | null> {
+        return this.nextFunc(this.state);
+    }
+}
+
+export async function amble<S>(initial: Nextable<S>, state: S): Promise<void> {
+    let next: Next<S> | null = await initial(state);
+    while (next) {
+        next = await next.run();
+    }
 }

@@ -1,7 +1,8 @@
-import { Node, State } from "../nodes.ts";
+import { Next } from "../ambler.ts";
+import { State } from "../state.ts";
 import { downloadFile } from "../utils/download_files.ts";
 
-export async function downloadFiles(state: State): Promise<[State, null]> {
+export async function downloadFiles(state: State): Promise<Next<State> | null> {
   if (!state.m3uFilePath) {
     throw new Error("M3U file path is not defined.");
   }
@@ -13,5 +14,5 @@ export async function downloadFiles(state: State): Promise<[State, null]> {
   await Promise.all(state.urls.map((url) => downloadFile(url, outputFolder)));
 
   console.log("All downloads complete.");
-  return [state, null];
+  return null;
 }
