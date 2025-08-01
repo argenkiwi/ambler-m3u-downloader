@@ -29,7 +29,7 @@ This application is designed to download audio files specified in an M3U playlis
         -   `resolve`: Available only if at least one URL starts with "https://downloads.khinsider.com/game-soundtracks".
         -   `download`: Available if `resolve` is not available (i.e., no khinsider URLs).
         -   `quit`: Always available.
-    -   Prompts the user to select one of the displayed options.
+    -   Prompts the user to select one of the displayed options by entering the corresponding number.
     -   Transitions to the corresponding node (`ListUrls`, `ResolveUrls`, `DownloadFiles`), or terminates the program if `quit` is selected.
 
 ### 4. ListUrls

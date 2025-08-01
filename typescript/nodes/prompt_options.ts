@@ -1,4 +1,4 @@
-import { Next, Nextable } from "../ambler.ts";
+import { Next } from "../ambler.ts";
 import { State } from "../state.ts";
 import { readLines } from "https://deno.land/std@0.224.0/io/mod.ts";
 import { listUrls } from "./list_urls.ts";
@@ -12,25 +12,25 @@ export async function promptOptions(
     url.startsWith("https://downloads.khinsider.com/game-soundtracks")
   );
 
-  const options: { [key: string]: Next<State> | null ; } = {
-    "list": new Next(listUrls, state),
-    "quit": null,
-  };
+  const options: { name: string, value: Next<State> | null }[] = [
+    { name: "quit", value: null },
+    { name: "list", value: new Next(listUrls, state) },
+  ];
 
   if (hasKhinsiderUrls) {
-    options["resolve"] = new Next(resolveUrls, state);
+    options.push({ name: "resolve", value: new Next(resolveUrls, state) });
   } else {
-    options["download"] = new Next(downloadFiles, state);
+    options.push({ name: "download", value: new Next(downloadFiles, state) });
   }
 
   while (true) {
     console.log("\nSelect an option:");
-    Object.keys(options).forEach((option) => console.log(`- ${option}`));
+    options.forEach((option, i) => console.log(`${i + 1}. ${option.name}`));
 
     for await (const line of readLines(Deno.stdin)) {
-      const choice = line.trim().toLowerCase();
-      if (options.hasOwnProperty(choice)) {
-        return options[choice];
+      const choice = parseInt(line.trim(), 10) - 1;
+      if (choice >= 0 && choice < options.length) {
+        return options[choice].value;
       } else {
         console.log("Invalid option. Please try again.");
       }

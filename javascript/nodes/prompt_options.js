@@ -16,7 +16,7 @@ export async function promptOptions(state) {
     }
 
     console.log('Please select an option:');
-    options.forEach(option => console.log(option));
+    options.forEach((option, i) => console.log(`${i + 1}. ${option}`));
 
     const rl = readline.createInterface({
         input: process.stdin,
@@ -31,8 +31,14 @@ export async function promptOptions(state) {
         });
     }
 
-    const selectedOption = await askForChoice();
+    let selectedOptionIndex = -1;
+    while (selectedOptionIndex < 0 || selectedOptionIndex >= options.length) {
+        const answer = await askForChoice();
+        selectedOptionIndex = parseInt(answer, 10) - 1;
+    }
     rl.close();
+
+    const selectedOption = options[selectedOptionIndex];
 
     switch (selectedOption) {
         case 'quit':
