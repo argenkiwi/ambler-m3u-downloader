@@ -1,9 +1,9 @@
 from enum import Enum, auto
-from typing import TypedDict
+from typing import TypedDict, Optional
 
 
 class State(TypedDict):
-    m3u_file: str | None
+    m3u_file: Optional[str]
     urls: list[str]
 
 

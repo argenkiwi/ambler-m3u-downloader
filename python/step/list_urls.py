@@ -1,13 +1,6 @@
-from typing import Tuple
-
-from common import Lead, State
-
-
-def list_urls(state: State) -> Tuple[State, Lead]:
+def list_urls(urls: list[str]):
     """
     Displays all the URLs currently in the application's state.
     """
-    for url in state['urls']:
+    for url in urls:
         print(url)
-
-    return state, Lead.PROMPT_OPTIONS

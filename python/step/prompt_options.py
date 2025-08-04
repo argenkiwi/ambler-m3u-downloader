@@ -1,13 +1,18 @@
-from typing import Tuple, Optional
+from enum import Enum, auto
+from typing import Optional
 
-from common import Lead, State
+
+class Option(Enum):
+    QUIT = auto()
+    LIST = auto()
+    RESOLVE = auto()
+    DOWNLOAD = auto()
 
 
-def prompt_options(state: State) -> Tuple[State, Optional[Lead]]:
+def prompt_options(urls: list[str]) -> Optional[Option]:
     """
     Presents the user with available actions and returns their selection.
     """
-    urls = state['urls']
     options = ['quit', 'list']
     can_resolve = any(url.startswith('https://downloads.khinsider.com/game-soundtracks') for url in urls)
     if can_resolve:
@@ -29,13 +34,13 @@ def prompt_options(state: State) -> Tuple[State, Optional[Lead]]:
     selected_option = options[selected_option_index]
 
     if selected_option == 'quit':
-        return state, None
+        return Option.QUIT
     elif selected_option == 'list':
-        return state, Lead.LIST_URLS
+        return Option.LIST
     elif selected_option == 'resolve':
-        return state, Lead.RESOLVE_URLS
+        return Option.RESOLVE
     elif selected_option == 'download':
-        return state, Lead.DOWNLOAD_FILES
+        return Option.DOWNLOAD
     else:
         print("Invalid choice.")
-        return state, Lead.PROMPT_OPTIONS
+        return None

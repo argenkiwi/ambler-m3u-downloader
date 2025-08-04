@@ -1,14 +1,8 @@
-from typing import Tuple
-
-from common import Lead, State
-
-
-def save_m3u_file(state: State) -> Tuple[State, Lead]:
+def save_m3u_file(m3u_file: str, urls: list[str]):
     """
     Saves the resolved URLs back to the M3U file.
     """
-    with open(state['m3u_file'], 'w') as f:
-        for url in state['urls']:
+    with open(m3u_file, 'w') as f:
+        for url in urls:
             f.write(url + '\n')
-    print(f"Resolved URLs saved to {state['m3u_file']}")
-    return state, Lead.PROMPT_OPTIONS
+    print(f"Resolved URLs saved to {m3u_file}")

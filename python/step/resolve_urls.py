@@ -1,15 +1,12 @@
 import asyncio
-from typing import Tuple
 
-from common import Lead, State
 from utils.resolve_khinsider_url import resolve_khinsider_url
 
 
-async def resolve_urls(state: State) -> Tuple[State, Lead]:
+async def resolve_urls(urls: list[str]) -> list[str]:
     """
     Resolves khinsider.com URLs to direct download links.
     """
-    urls = state['urls']
 
     async def run_resolver():
         tasks = []
@@ -25,6 +22,5 @@ async def resolve_urls(state: State) -> Tuple[State, Lead]:
 
     print("Resolving URLs...")
     resolved_urls = await run_resolver()
-    state['urls'] = resolved_urls
     print("URLs resolved.")
-    return state, Lead.SAVE_M3U_FILE
+    return resolved_urls
