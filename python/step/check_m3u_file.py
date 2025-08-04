@@ -4,7 +4,7 @@ from typing import Tuple
 from common import State, Lead
 
 
-async def check_m3u_file(state: State) -> Tuple[State, Lead]:
+def check_m3u_file(state: State) -> Tuple[State, Lead]:
     """
     Checks if an M3U file path is valid, prompting the user if not.
     """

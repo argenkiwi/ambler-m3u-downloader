@@ -3,7 +3,7 @@ from typing import Tuple
 from common import Lead, State
 
 
-async def read_m3u_file(state: State) -> Tuple[State, Lead]:
+def read_m3u_file(state: State) -> Tuple[State, Lead]:
     """
     Reads the content of the M3U file and extracts URLs.
     """

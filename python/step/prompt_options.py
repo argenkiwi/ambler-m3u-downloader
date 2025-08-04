@@ -3,7 +3,7 @@ from typing import Tuple, Optional
 from common import Lead, State
 
 
-async def prompt_options(state: State) -> Tuple[State, Optional[Lead]]:
+def prompt_options(state: State) -> Tuple[State, Optional[Lead]]:
     """
     Presents the user with available actions and returns their selection.
     """
@@ -28,15 +28,14 @@ async def prompt_options(state: State) -> Tuple[State, Optional[Lead]]:
 
     selected_option = options[selected_option_index]
 
-    match selected_option:
-        case 'quit':
-            return state, None
-        case 'list':
-            return state, Lead.LIST_URLS
-        case 'resolve':
-            return state, Lead.RESOLVE_URLS
-        case 'download':
-            return state, Lead.DOWNLOAD_FILES
-        case _:
-            print("Invalid choice.")
-            return state, Lead.PROMPT_OPTIONS
+    if selected_option == 'quit':
+        return state, None
+    elif selected_option == 'list':
+        return state, Lead.LIST_URLS
+    elif selected_option == 'resolve':
+        return state, Lead.RESOLVE_URLS
+    elif selected_option == 'download':
+        return state, Lead.DOWNLOAD_FILES
+    else:
+        print("Invalid choice.")
+        return state, Lead.PROMPT_OPTIONS
