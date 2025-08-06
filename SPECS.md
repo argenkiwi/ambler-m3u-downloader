@@ -9,11 +9,18 @@ This application is designed to download audio files specified in an M3U playlis
 -   **Purpose:** Validates the provided M3U file path.
 -   **Details:**
     -   Checks if an M3U file path was provided as a command-line argument.
-    -   If not provided, or if the provided path does not exist, is not a file, or is not a valid `.m3u` file, it prompts the user to enter a valid M3U file path.
+    -   If the path is valid (exists, is a file, and has a `.m3u` extension), it transitions to the `ReadM3UFile` node.
+    -   If the path is not valid, it transitions to the `PromptM3UFile` node.
     -   Stores the validated M3U file path in the application's state.
-    -   Transitions to the `ReadM3UFile` node.
 
-### 2. ReadM3UFile
+### 2. PromptM3UFile
+-   **Purpose:** Prompts the user to enter a valid M3U file path.
+-   **Details:**
+    -   Prompts the user to enter a path to an M3U file.
+    -   If the user leaves the input empty, the application finishes.
+    -   Once the user provides a path, it transitions back to the `CheckM3UFile` node for validation.
+
+### 3. ReadM3UFile
 -   **Purpose:** Reads the content of the M3U file and extracts URLs.
 -   **Details:**
     -   Opens and reads the M3U file specified in the state.
@@ -21,7 +28,7 @@ This application is designed to download audio files specified in an M3U playlis
     -   Stores the list of extracted URLs in the application's state.
     -   Transitions to the `PromptOptions` node.
 
-### 3. PromptOptions
+### 4. PromptOptions
 -   **Purpose:** Presents the user with available actions and handles their selection.
 -   **Details:**
     -   Determines which options are available based on the URLs in the state:
@@ -32,14 +39,14 @@ This application is designed to download audio files specified in an M3U playlis
     -   Prompts the user to select one of the displayed options by entering the corresponding number.
     -   Transitions to the corresponding node (`ListUrls`, `ResolveUrls`, `DownloadFiles`), or terminates the program if `quit` is selected.
 
-### 4. ListUrls
+### 5. ListUrls
 -   **Purpose:** Displays all the URLs currently in the application's state.
 -   **Details:**
     -   Iterates through the list of URLs stored in the state.
     -   Prints each URL to the console.
     -   Transitions back to the `PromptOptions` node to allow further actions.
 
-### 5. ResolveUrls
+### 6. ResolveUrls
 -   **Purpose:** Resolves `khinsider.com` URLs to direct download links.
 -   **Details:**
     -   This node is only accessible if `PromptOptions` determined that `resolve` is an available action.
@@ -47,13 +54,13 @@ This application is designed to download audio files specified in an M3U playlis
     -   Replaces the original `khinsider.com` URLs in the state with their resolved direct download links.
     -   Transitions to the `SaveM3UFile` node.
 
-### 6. SaveM3UFile
+### 7. SaveM3UFile
 -   **Purpose:** Saves the resolved URLs back to the original M3U file.
 -   **Details:**
     -   Writes each resolved URL from the application's state to the M3U file, overwriting its previous content.
     -   Transitions back to the `PromptOptions` node.
 
-### 7. DownloadFiles
+### 8. DownloadFiles
 -   **Purpose:** Downloads all URLs in the application's state.
 -   **Details:**
     -   This node is only accessible if `PromptOptions` determined that `download` is an available action.
