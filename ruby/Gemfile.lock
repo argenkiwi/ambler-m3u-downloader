@@ -1,0 +1,75 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    async (1.32.1)
+      console (~> 1.10)
+      nio4r (~> 2.3)
+      timers (~> 4.1)
+    async-http (0.64.2)
+      async (>= 1.25)
+      async-io (>= 1.28)
+      async-pool (>= 0.2)
+      protocol-http (~> 0.26.0)
+      protocol-http1 (~> 0.19.0)
+      protocol-http2 (~> 0.16.0)
+      traces (>= 0.10.0)
+    async-io (1.43.2)
+      async
+    async-pool (0.4.0)
+      async (>= 1.25)
+    console (1.24.0)
+      fiber-annotation
+      fiber-local
+      json
+    csv (3.3.5)
+    fiber-annotation (0.2.0)
+    fiber-local (1.0.0)
+    httparty (0.23.1)
+      csv
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
+    json (2.13.2)
+    mini_mime (1.1.5)
+    mini_portile2 (2.8.9)
+    multi_xml (0.6.0)
+    nio4r (2.7.4)
+    nokogiri (1.18.9)
+      mini_portile2 (~> 2.8.2)
+      racc (~> 1.4)
+    nokogiri (1.18.9-aarch64-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.9-arm-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.9-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.9-x86_64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.9-x86_64-linux-gnu)
+      racc (~> 1.4)
+    protocol-hpack (1.4.3)
+    protocol-http (0.26.4)
+    protocol-http1 (0.19.1)
+      protocol-http (~> 0.22)
+    protocol-http2 (0.16.0)
+      protocol-hpack (~> 1.4)
+      protocol-http (~> 0.18)
+    racc (1.8.1)
+    timers (4.3.5)
+    traces (0.11.1)
+
+PLATFORMS
+  aarch64-linux
+  arm-linux
+  arm64-darwin
+  x86-linux
+  x86_64-darwin
+  x86_64-linux
+
+DEPENDENCIES
+  async
+  async-http
+  httparty
+  nokogiri
+
+BUNDLED WITH
+   2.5.9

@@ -1,5 +1,4 @@
 import { Next } from '../ambler.js';
-import { promptOptions } from './prompt_options.js';
 import { downloadFile } from '../utils/download_files.js';
 import path from 'path';
 
@@ -10,5 +9,5 @@ export async function downloadFiles(state) {
     await Promise.all(state.urls.map(url => downloadFile(url, outputFolder)));
 
     console.log("All files downloaded.");
-    return new Next(promptOptions, state);
+    return null;
 }

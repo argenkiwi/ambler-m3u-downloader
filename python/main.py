@@ -57,13 +57,13 @@ async def main():
             return state, Lead.PROMPT_OPTIONS
         elif lead == Lead.RESOLVE_URLS:
             state['urls'] = await resolve_urls(state['urls'])
-            return state, Lead.PROMPT_OPTIONS
+            return state, Lead.SAVE_M3U_FILE
         elif lead == Lead.READ_M3U_FILE:
             state['urls'] = read_m3u_file(state['m3u_file'])
             return state, Lead.PROMPT_OPTIONS
         elif lead == Lead.DOWNLOAD_FILES:
             await download_files(state['m3u_file'], state['urls'])
-            return state, Lead.PROMPT_OPTIONS
+            return state, None
         elif lead == Lead.SAVE_M3U_FILE:
             save_m3u_file(state['m3u_file'], state['urls'])
             return state, Lead.PROMPT_OPTIONS
