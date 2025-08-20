@@ -5,6 +5,7 @@ import { listUrls } from './nodes/list_urls.js';
 import { resolveUrls } from './nodes/resolve_urls.js';
 import { saveM3UFile } from './nodes/save_m3u_file.js';
 import { downloadFiles } from './nodes/download_files.js';
+import { promptM3UFile } from './nodes/prompt_m3u_file.js';
 
 export {
     checkM3UFile,
@@ -14,4 +15,5 @@ export {
     resolveUrls,
     saveM3UFile,
     downloadFiles,
+    promptM3UFile,
 };
