@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'async'
+require 'async/barrier'
 require_relative 'resolve_khinsider_url'
 
 module ResolveUrls
