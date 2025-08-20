@@ -1,24 +1,24 @@
+# frozen_string_literal: true
+
 module PromptOptions
   def self.prompt(urls)
     puts "#{urls.length} URLs loaded."
-    puts "Select an option:"
-    puts "  d: download all files"
-    puts "  r: resolve all URLs"
-    puts "  l: list all URLs"
-    puts "  q: quit"
-    print "> "
+    puts 'Select an option:'
+    puts '  d: download all files'
+    puts '  r: resolve all URLs'
+    puts '  l: list all URLs'
+    puts '  q: quit'
+    print '> '
     option = gets.chomp
     case option
-    when "d"
+    when 'd'
       :download
-    when "r"
+    when 'r'
       :resolve
-    when "l"
+    when 'l'
       :list
-    when "q"
+    when 'q'
       :quit
-    else
-      nil
     end
   end
 end

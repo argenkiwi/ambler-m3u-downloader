@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'lib/ambler'
 require_relative 'lib/check_m3u_file'
 require_relative 'lib/download_files'
@@ -61,4 +63,4 @@ Ambler.amble(initial_state, :check_m3u_file) do |lead, state|
   end
 end
 
-puts "Application finished."
+puts 'Application finished.'

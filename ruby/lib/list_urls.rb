@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ListUrls
   def self.list(urls)
     urls.each do |url|

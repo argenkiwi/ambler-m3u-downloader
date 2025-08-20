@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require 'async'
 require_relative 'download_file'
 
 module DownloadFiles
   def self.download(m3u_file, urls)
-    m3u_file_name = File.basename(m3u_file, ".*")
+    m3u_file_name = File.basename(m3u_file, '.*')
 
     puts "Starting download of #{urls.length} files..."
 
@@ -17,6 +19,6 @@ module DownloadFiles
       barrier.wait
     end
 
-    puts "All files downloaded."
+    puts 'All files downloaded.'
   end
 end

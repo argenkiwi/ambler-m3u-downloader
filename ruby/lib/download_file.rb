@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'async/http'
 require 'fileutils'
 
@@ -10,6 +12,7 @@ module DownloadFile
 
       Async::HTTP.get(url) do |response|
         raise "Request failed with status #{response.status}" unless response.success?
+
         File.open(filepath, 'wb') do |f|
           f.write(response.read)
         end

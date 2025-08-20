@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'async'
 
 module Ambler
@@ -6,9 +8,7 @@ module Ambler
     current_lead = lead
 
     Async do
-      while current_lead
-        current_state, current_lead = yield(current_lead, current_state)
-      end
+      current_state, current_lead = yield(current_lead, current_state) while current_lead
     end
 
     current_state
