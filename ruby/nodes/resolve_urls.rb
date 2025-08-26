@@ -2,10 +2,12 @@
 
 require 'async'
 require 'async/barrier'
-require_relative 'resolve_khinsider_url'
+require_relative '../lib/resolve_khinsider_url'
+require_relative '../lib/node'
 
 module ResolveUrls
-  def self.resolve(urls)
+  def self.resolve(state)
+    urls = state[:urls]
     resolved_urls = []
     Async do
       barrier = Async::Barrier.new
@@ -16,6 +18,7 @@ module ResolveUrls
       end
       barrier.wait
     end
-    resolved_urls
+    state[:urls] = resolved_urls
+    [state, Node::SAVE_M3U_FILE]
   end
 end

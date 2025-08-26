@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 require 'async'
-require_relative 'download_file'
+require_relative '../lib/download_file'
+require_relative '../lib/node'
 
 module DownloadFiles
-  def self.download(m3u_file, urls)
+  def self.download(state)
+    m3u_file = state[:m3u_file]
+    urls = state[:urls]
     m3u_file_name = File.basename(m3u_file, '.*')
 
     puts "Starting download of #{urls.length} files..."
@@ -20,5 +23,6 @@ module DownloadFiles
     end
 
     puts 'All files downloaded.'
+    [state, nil]
   end
 end
