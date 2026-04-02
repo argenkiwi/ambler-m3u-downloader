@@ -1,10 +1,9 @@
 import { Next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
-import { resolveKhinsiderUrl as defaultResolver } from "../utils/resolve_khinsider_url.ts";
 
 export function resolveUrls(
   onSuccess: Nextable<State>,
-  resolver: (url: string) => Promise<string> = defaultResolver
+  resolver: (url: string) => Promise<string>
 ): Nextable<State> {
   return async (state: State): Promise<Next<State>> => {
     console.log("Resolving Khinsider URLs...");
