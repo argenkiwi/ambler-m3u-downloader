@@ -1,26 +1,29 @@
-import { amble } from "./ambler.ts";
+import { amble, Next, Nextable } from "./ambler.ts";
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 Deno.test("amble function works correctly", async () => {
   let callCount = 0;
-  const dummyStep = async (
-    state: number,
-    node: string,
-  ): Promise<[number, string | null]> => {
+  
+  const stop: Nextable<number> = async (state: number) => {
     callCount++;
-    if (node === "START") {
-      return [state + 1, "MIDDLE"];
-    } else if (node === "MIDDLE") {
-      return [state + 1, "END"];
-    } else if (node === "END") {
-      return [state + 1, null];
-    }
-    return [state, null];
+    return null;
   };
 
-  const [finalState, finalNode] = await amble(0, "START", dummyStep);
+  const step: Nextable<number> = async (state: number) => {
+    callCount++;
+    if (state < 3) {
+      return new Next(step, state + 1);
+    }
+    return new Next(stop, state);
+  };
 
-  assertEquals(finalState, 3);
-  assertEquals(finalNode, null);
-  assertEquals(callCount, 3);
+  const start: Nextable<number> = async (state: number) => {
+    callCount++;
+    return new Next(step, state + 1);
+  };
+
+  await amble(start, 0);
+
+  // start (0->1) -> step (1->2) -> step (2->3) -> step (3->3) -> stop
+  assertEquals(callCount, 5);
 });

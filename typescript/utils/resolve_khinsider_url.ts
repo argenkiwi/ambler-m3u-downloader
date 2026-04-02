@@ -7,7 +7,11 @@ export async function resolveKhinsiderUrl(url: string): Promise<string> {
       return match[1];
     }
   } catch (error) {
-    console.error(`Error resolving Khinsider URL ${url}: ${error.message}`);
+    if (error instanceof Error) {
+      console.error(`Error resolving Khinsider URL ${url}: ${error.message}`);
+    } else {
+      console.error(`Error resolving Khinsider URL ${url}: ${String(error)}`);
+    }
   }
   return url; // Return original URL if resolution fails
 }

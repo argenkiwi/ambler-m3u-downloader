@@ -5,11 +5,11 @@
 - **State**: The state of the application can be any TypeScript type. It should
   be defined as an interface.
 - **Nodes**: Nodes are represented as `async` functions (`Nextable<S>`).
-- **Decoupling**: Nodes should not import each other. Use the **Factory Pattern** to inject dependencies (successor nodes) during initialization.
+- **Decoupling**: Nodes should not import each other or hardcode side-effect heavy logic. Use the **Factory Pattern** to inject both successor nodes and logic dependencies (like API clients or utilities) during initialization.
 
 ### Node Functions
 
-- A node factory is a function that returns a `Nextable<S>`.
+- A node factory is a function that returns a `Nextable<S>`. Its arguments should include any successor nodes or external logic it needs to execute.
 - Each node is an `async` function that takes the current state as input and returns a `Promise<Next<S> | null>`.
 - A node function returns a `Next` object to transition to the next node with a (possibly updated) state.
 - If a node function returns `null`, the `amble` loop terminates.
