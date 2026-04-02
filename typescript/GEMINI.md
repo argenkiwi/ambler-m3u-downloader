@@ -4,72 +4,63 @@
 
 - **State**: The state of the application can be any TypeScript type. It should
   be defined as an interface.
-- **Nodes**: Nodes should be represented using a TypeScript `enum` for type
-  safety and clarity.
+- **Nodes**: Nodes are represented as `async` functions (`Nextable<S>`).
+- **Decoupling**: Nodes should not import each other. Use the **Factory Pattern** to inject dependencies (successor nodes) during initialization.
 
 ### Node Functions
 
-- Each node should have a corresponding `async` function that takes the current
-  state as input and returns a tuple containing the new state and the next node
-  to transition to. If the next node is `null`, the `amble` function will
-  terminate.
+- A node factory is a function that returns a `Nextable<S>`.
+- Each node is an `async` function that takes the current state as input and returns a `Promise<Next<S> | null>`.
+- A node function returns a `Next` object to transition to the next node with a (possibly updated) state.
+- If a node function returns `null`, the `amble` loop terminates.
 
-### Dispatching
+### Transitions
 
-- A `switch` statement within an `async` function (e.g., `direct`) should be
-  used to map nodes to their corresponding functions. This provides a clean and
-  efficient way to dispatch to the correct function based on the current node.
+- Nodes transition to each other by returning a new `Next` instance that encapsulates the next node function and the new state.
+- Dependencies between nodes are wired together in a central location (e.g., `main.ts`).
 
 ```typescript
-import { amble } from "./ambler.ts";
+import { amble, Next, Nextable } from "./ambler.ts";
 
-// 1. Define Nodes
-enum Node {
-  START,
-  STEP,
-  STOP,
-}
-
-// 2. Define Shared State
+// 1. Define Shared State
 interface State {
   count: number;
 }
 
-// 3. Create Node Functions
-async function start(state: State): Promise<[State, Node]> {
-  console.log("Let's count...");
-  return [state, Node.STEP];
+// 2. Create Node Factories
+function start(onSuccess: Nextable<State>): Nextable<State> {
+  return async (state: State) => {
+    console.log("Let's count...");
+    return new Next(onSuccess, state);
+  };
 }
 
-async function step(state: State): Promise<[State, Node | null]> {
-  const newCount = state.count + 1;
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log(`...${newCount}...`);
-  return [{ count: newCount }, Math.random() < 0.5 ? Node.STEP : Node.STOP];
+function step(onRepeat: Nextable<State>, onStop: Nextable<State>): Nextable<State> {
+  return async (state: State) => {
+    const newCount = state.count + 1;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log(`...${newCount}...`);
+    
+    const nextNode = Math.random() < 0.5 ? onRepeat : onStop;
+    return new Next(nextNode, { count: newCount });
+  };
 }
 
-async function stop(state: State): Promise<[State, null]> {
+const stop: Nextable<State> = async (state: State) => {
   console.log("...stop.");
-  return [state, null];
-}
+  return null;
+};
 
-// 4. Start the Application (direct function and amble call)
-async function direct(state: State, node: Node): Promise<[State, Node | null]> {
-  switch (node) {
-    case Node.START:
-      return await start(state);
-    case Node.STEP:
-      return await step(state);
-    case Node.STOP:
-      return await stop(state);
-    default:
-      throw new Error(`Unknown node: ${node}`);
-  }
-}
-
+// 3. Start and Wire the Application
 const initialState: State = { count: 0 };
 
 if (import.meta.main) {
-  await amble(initialState, Node.START, direct);
+  // Use let/wrappers for circular references if needed
+  let stepNode: Nextable<State>;
+  stepNode = step((state) => stepNode(state), stop);
+  
+  const startNode = start(stepNode);
+
+  await amble(startNode, initialState);
 }
 ```

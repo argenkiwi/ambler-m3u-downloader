@@ -1,10 +1,13 @@
-import { Next } from "../ambler.ts";
+import { Next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
-import { promptOptions } from "./prompt_options.ts";
 
-export async function listUrls(state: State): Promise<Next<State>> {
-  console.log("\n--- URLs ---");
-  state.urls.forEach((url) => console.log(url));
-  console.log("------------");
-  return new Next(promptOptions, state);
+export function listUrls(
+  onSuccess: Nextable<State>
+): Nextable<State> {
+  return async (state: State): Promise<Next<State>> => {
+    console.log("\n--- URLs ---");
+    state.urls.forEach((url) => console.log(url));
+    console.log("------------");
+    return new Next(onSuccess, state);
+  };
 }
