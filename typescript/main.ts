@@ -15,9 +15,9 @@ const initialState: State = {
 };
 
 // 1. Define leaf/linear nodes
-const download = downloadFiles();
 const list = (state: State) => listUrls(options)(state); // Recursive back to options
 const save = resolveUrls(saveM3UFile( (state: State) => options(state) ));
+const download = downloadFiles((state: State) => null); // End of program.
 
 // 2. Define the main options menu (forward reference for some)
 const options = promptOptions({
