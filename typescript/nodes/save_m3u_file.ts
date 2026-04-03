@@ -1,8 +1,16 @@
 import { Next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
 
+type SaveEdges = { onSuccess: Nextable<State> };
+type SaveUtils = { writeTextFile: (path: string, content: string) => Promise<void> };
+
+const defaultUtils: SaveUtils = {
+  writeTextFile: (path, content) => Deno.writeTextFile(path, content),
+};
+
 export function saveM3UFile(
-  onSuccess: Nextable<State>
+  edges: SaveEdges,
+  utils: SaveUtils = defaultUtils
 ): Nextable<State> {
   return async (state: State): Promise<Next<State>> => {
     if (!state.m3uFilePath) {
@@ -10,8 +18,8 @@ export function saveM3UFile(
     }
 
     const content = state.urls.join("\n");
-    await Deno.writeTextFile(state.m3uFilePath, content);
+    await utils.writeTextFile(state.m3uFilePath, content);
     console.log(`Saved resolved URLs to ${state.m3uFilePath}`);
-    return new Next(onSuccess, state);
+    return new Next(edges.onSuccess, state);
   };
 }

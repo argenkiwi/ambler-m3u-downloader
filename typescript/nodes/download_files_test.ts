@@ -20,7 +20,10 @@ Deno.test("downloadFiles should call downloader for each URL and transition to o
     return null;
   };
 
-  const node = downloadFiles(onSuccess, mockDownloader);
+  const node = downloadFiles(
+    { onSuccess },
+    { downloader: mockDownloader }
+  );
   const next = await node(initialState);
 
   if (!next) {
@@ -44,7 +47,10 @@ Deno.test("downloadFiles should throw an error if m3uFilePath is missing", async
     urls: ["http://example.com/1.mp3"],
   };
 
-  const node = downloadFiles(onSuccess, mockDownloader);
+  const node = downloadFiles(
+    { onSuccess },
+    { downloader: mockDownloader }
+  );
 
   await assertRejects(
     () => node(initialState),

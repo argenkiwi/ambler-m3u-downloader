@@ -29,7 +29,10 @@ Deno.test("resolveUrls should resolve only Khinsider URLs using provided resolve
     return null;
   };
 
-  const nodeWithCapture = resolveUrls(capturingOnSuccess, mockResolver);
+  const nodeWithCapture = resolveUrls(
+    { onSuccess: capturingOnSuccess },
+    { resolver: mockResolver }
+  );
   const nextWithCapture = await nodeWithCapture(initialState);
   
   if (!nextWithCapture) {
