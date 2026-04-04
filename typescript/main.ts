@@ -14,24 +14,19 @@ const initialState: State = {
   urls: [],
 };
 
-// 1. Define leaf/linear nodes
-const list = (state: State) => listUrls({ onSuccess: options })(state); // Recursive back to options
-const save = resolveUrls({
-  onSuccess: saveM3UFile({ onSuccess: (state: State) => options(state) }),
-});
-const download = downloadFiles({ onSuccess: (_state: State) => null }); // End of program.
+const nodes: Record<string, Nextable<State>> = {};
 
-// 2. Define the main options menu (forward reference for some)
-const options = promptOptions({ onList: list, onResolve: save, onDownload: download });
+const next = (key: string): Nextable<State> => (state) => nodes[key](state);
 
-// 3. Define entry loop
-let check: Nextable<State>;
-const prompt = promptM3UFile({ onCheck: (state: State) => check(state) });
-check = checkM3UFile({
-  onRead: readM3UFile({ onSuccess: options }),
-  onPrompt: prompt,
-});
+nodes["checkM3UFile"]  = checkM3UFile({ onRead: next("readM3UFile"), onPrompt: next("promptM3UFile") });
+nodes["promptM3UFile"] = promptM3UFile({ onCheck: next("checkM3UFile") });
+nodes["readM3UFile"]   = readM3UFile({ onSuccess: next("promptOptions") });
+nodes["promptOptions"] = promptOptions({ onList: next("listUrls"), onResolve: next("resolveUrls"), onDownload: next("downloadFiles") });
+nodes["listUrls"]      = listUrls({ onSuccess: next("promptOptions") });
+nodes["resolveUrls"]   = resolveUrls({ onSuccess: next("saveM3UFile") });
+nodes["saveM3UFile"]   = saveM3UFile({ onSuccess: next("promptOptions") });
+nodes["downloadFiles"] = downloadFiles({ onSuccess: async (_state) => null });
 
 if (import.meta.main) {
-  await amble(check, initialState);
+  await amble(nodes["checkM3UFile"], initialState);
 }
