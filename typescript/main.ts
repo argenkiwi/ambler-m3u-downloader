@@ -1,4 +1,4 @@
-import { amble, Nextable } from "./ambler.ts";
+import { amble, node } from "./ambler.ts";
 import { State } from "./state.ts";
 import { checkM3UFile } from "./nodes/check_m3u_file.ts";
 import { promptM3UFile } from "./nodes/prompt_m3u_file.ts";
@@ -14,23 +14,19 @@ const initialState: State = {
   urls: [],
 };
 
-// 1. Define leaf/linear nodes
-const list = (state: State) => listUrls({ onSuccess: options })(state); // Recursive back to options
-const save = resolveUrls({
-  onSuccess: saveM3UFile({ onSuccess: (state: State) => options(state) }),
-});
-const download = downloadFiles({ onSuccess: (_state: State) => null }); // End of program.
+// Entry loop
+const check = node(() => checkM3UFile({ onRead: read, onPrompt: prompt }));
+const read = node(() => readM3UFile({ onSuccess: options }))
+const prompt = node(() => promptM3UFile({ onCheck: check }));
 
-// 2. Define the main options menu (forward reference for some)
-const options = promptOptions({ onList: list, onResolve: save, onDownload: download });
+// Main menu
+const options = node(() => promptOptions({ onList: list, onResolve: resolve, onDownload: download }));
+const list = node(() => listUrls({ onSuccess: options }));
+const resolve = node(() => resolveUrls({ onSuccess: save }));
+const save = node(() => saveM3UFile({ onSuccess: options }));
 
-// 3. Define entry loop
-let check: Nextable<State>;
-const prompt = promptM3UFile({ onCheck: (state: State) => check(state) });
-check = checkM3UFile({
-  onRead: readM3UFile({ onSuccess: options }),
-  onPrompt: prompt,
-});
+// Terminal node
+const download = node(() => downloadFiles({ onSuccess: (_state: State) => null }));
 
 if (import.meta.main) {
   await amble(check, initialState);

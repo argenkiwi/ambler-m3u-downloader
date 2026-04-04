@@ -8,6 +8,10 @@ export class Next<S> {
     }
 }
 
+export function node<S>(factory: () => Nextable<S>): Nextable<S> {
+  return (state: S) => factory()(state);
+}
+
 export async function amble<S>(initial: Nextable<S>, state: S): Promise<void> {
     let next: Next<S> | null = await initial(state);
     while (next) {

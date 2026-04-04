@@ -27,10 +27,11 @@ This is a Deno/TypeScript CLI tool for downloading M3U playlists (with special s
 
 ### Core Framework (`ambler.ts`)
 
-Three key constructs:
+Four key constructs:
 
 - **`Nextable<S>`** — type alias for `(state: S) => Promise<Next<S> | null>`
 - **`Next<S>`** — wraps the next node function and state to execute
+- **`node<S>()`** — defers a `Nextable<S>` factory, enabling `const` declarations with forward/circular references
 - **`amble<S>()`** — the execution loop: runs nodes until one returns `null`
 
 ### Node Pattern
@@ -47,11 +48,11 @@ function myNode(onSuccess: Nextable<State>, dep: SomeDep): Nextable<State> {
 }
 ```
 
-For circular references (e.g., looping back to self), use a `let` wrapper in `main.ts`:
+All nodes in `main.ts` are declared as `const` using `node()` to defer factory evaluation, which resolves forward and circular references:
 
 ```typescript
-let nodeRef: Nextable<State>;
-nodeRef = myNode((state) => nodeRef(state), dep);
+const check = node(() => checkM3UFile({ onRead: readM3UFile({ onSuccess: options }), onPrompt: prompt }));
+const prompt = node(() => promptM3UFile({ onCheck: check }));
 ```
 
 ### Execution Flow
