@@ -14,24 +14,40 @@ const initialState: State = {
   urls: [],
 };
 
-// 1. Define leaf/linear nodes
-const list = (state: State) => listUrls({ onSuccess: options })(state); // Recursive back to options
-const save = resolveUrls({
-  onSuccess: saveM3UFile({ onSuccess: (state: State) => options(state) }),
-});
-const download = downloadFiles({ onSuccess: (_state: State) => null }); // End of program.
+enum Node {
+  CheckM3UFile,
+  PromptM3UFile,
+  ReadM3UFile,
+  PromptOptions,
+  ListUrls,
+  ResolveUrls,
+  SaveM3UFile,
+  DownloadFiles,
+}
 
-// 2. Define the main options menu (forward reference for some)
-const options = promptOptions({ onList: list, onResolve: save, onDownload: download });
-
-// 3. Define entry loop
-let check: Nextable<State>;
-const prompt = promptM3UFile({ onCheck: (state: State) => check(state) });
-check = checkM3UFile({
-  onRead: readM3UFile({ onSuccess: options }),
-  onPrompt: prompt,
-});
+function next(node: Node): Nextable<State> {
+  return (state: State) => {
+    switch (node) {
+      case Node.CheckM3UFile:
+        return checkM3UFile({ onRead: next(Node.ReadM3UFile), onPrompt: next(Node.PromptM3UFile) })(state);
+      case Node.PromptM3UFile:
+        return promptM3UFile({ onCheck: next(Node.CheckM3UFile) })(state);
+      case Node.ReadM3UFile:
+        return readM3UFile({ onSuccess: next(Node.PromptOptions) })(state);
+      case Node.PromptOptions:
+        return promptOptions({ onList: next(Node.ListUrls), onResolve: next(Node.ResolveUrls), onDownload: next(Node.DownloadFiles) })(state);
+      case Node.ListUrls:
+        return listUrls({ onSuccess: next(Node.PromptOptions) })(state);
+      case Node.ResolveUrls:
+        return resolveUrls({ onSuccess: next(Node.SaveM3UFile) })(state);
+      case Node.SaveM3UFile:
+        return saveM3UFile({ onSuccess: next(Node.PromptOptions) })(state);
+      case Node.DownloadFiles:
+        return downloadFiles({ onSuccess: (_state) => null })(state);
+    }
+  };
+}
 
 if (import.meta.main) {
-  await amble(check, initialState);
+  await amble(next(Node.CheckM3UFile), initialState);
 }
