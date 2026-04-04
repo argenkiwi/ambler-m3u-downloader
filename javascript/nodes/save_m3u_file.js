@@ -1,9 +1,17 @@
 import { Next } from '../ambler.js';
-import { promptOptions } from './prompt_options.js';
 import fs from 'fs';
 
-export async function saveM3UFile(state) {
-    fs.writeFileSync(state.m3uFilePath, state.urls.join('\n'));
-    console.log(`Resolved URLs saved to ${state.m3uFilePath}`);
-    return new Next(promptOptions, state);
+const defaultUtils = { writeTextFile: (path, content) => fs.writeFileSync(path, content) };
+
+export function saveM3UFile(edges, utils = defaultUtils) {
+    return async (state) => {
+        if (!state.m3uFilePath) {
+            throw new Error('M3U file path is not defined.');
+        }
+
+        const content = state.urls.join('\n');
+        utils.writeTextFile(state.m3uFilePath, content);
+        console.log(`Saved resolved URLs to ${state.m3uFilePath}`);
+        return new Next(edges.onSuccess, state);
+    };
 }

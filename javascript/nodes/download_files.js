@@ -2,12 +2,20 @@ import { Next } from '../ambler.js';
 import { downloadFile } from '../utils/download_files.js';
 import path from 'path';
 
-export async function downloadFiles(state) {
-    const outputFolder = path.basename(state.m3uFilePath, '.m3u');
-    console.log(`Downloading to ${outputFolder} folder...`);
+const defaultUtils = { downloader: downloadFile };
 
-    await Promise.all(state.urls.map(url => downloadFile(url, outputFolder)));
+export function downloadFiles(edges, utils = defaultUtils) {
+    return async (state) => {
+        if (!state.m3uFilePath) {
+            throw new Error('M3U file path is not defined.');
+        }
 
-    console.log("All files downloaded.");
-    return null;
+        const outputFolder = path.basename(state.m3uFilePath, '.m3u');
+        console.log(`Downloading files to: ${outputFolder}`);
+
+        await Promise.all(state.urls.map((url) => utils.downloader(url, outputFolder)));
+
+        console.log('All downloads complete.');
+        return new Next(edges.onSuccess, state);
+    };
 }

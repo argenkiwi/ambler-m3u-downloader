@@ -9,6 +9,10 @@ export class Next {
     }
 }
 
+export function node(factory) {
+    return (state) => factory()(state);
+}
+
 export async function amble(initial, state) {
     let next = await initial(state);
     while (next) {

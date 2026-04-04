@@ -1,56 +1,43 @@
 import { Next } from '../ambler.js';
-import { listUrls } from './list_urls.js';
-import { resolveUrls } from './resolve_urls.js';
-import { downloadFiles } from './download_files.js';
-import readline from 'readline';
+import { createInterface } from 'readline';
 
-export async function promptOptions(state) {
-    const urls = state.urls;
-    const options = ['quit', 'list'];
-    const canResolve = urls.some(url => url.startsWith('https://downloads.khinsider.com/game-soundtracks'));
-
-    if (canResolve) {
-        options.push('resolve');
-    } else {
-        options.push('download');
-    }
-
-    console.log('Please select an option:');
-    options.forEach((option, i) => console.log(`${i + 1}. ${option}`));
-
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
-    function askForChoice() {
-        return new Promise((resolve) => {
-            rl.question('Enter your choice: ', (answer) => {
-                resolve(answer);
-            });
+const defaultUtils = {
+    readLine: () => new Promise((resolve) => {
+        const rl = createInterface({ input: process.stdin });
+        rl.once('line', (line) => {
+            rl.close();
+            resolve(line.trim());
         });
-    }
+    }),
+};
 
-    let selectedOptionIndex = -1;
-    while (selectedOptionIndex < 0 || selectedOptionIndex >= options.length) {
-        const answer = await askForChoice();
-        selectedOptionIndex = parseInt(answer, 10) - 1;
-    }
-    rl.close();
+export function promptOptions(edges, utils = defaultUtils) {
+    return async (state) => {
+        const hasKhinsiderUrls = state.urls.some((url) =>
+            url.startsWith('https://downloads.khinsider.com/game-soundtracks')
+        );
 
-    const selectedOption = options[selectedOptionIndex];
+        const options = [
+            ['quit', null],
+            ['list', new Next(edges.onList, state)],
+        ];
 
-    switch (selectedOption) {
-        case 'quit':
-            return null;
-        case 'list':
-            return new Next(listUrls, state);
-        case 'resolve':
-            return new Next(resolveUrls, state);
-        case 'download':
-            return new Next(downloadFiles, state);
-        default:
-            console.log("Invalid choice.");
-            return new Next(promptOptions, state);
-    }
+        if (hasKhinsiderUrls) {
+            options.push(['resolve', new Next(edges.onResolve, state)]);
+        } else {
+            options.push(['download', new Next(edges.onDownload, state)]);
+        }
+
+        while (true) {
+            console.log('\nSelect an option:');
+            options.forEach(([name], i) => console.log(`${i + 1}. ${name}`));
+
+            const line = await utils.readLine();
+            const choice = parseInt(line, 10) - 1;
+            if (choice >= 0 && choice < options.length) {
+                return options[choice][1];
+            }
+            console.log('Invalid option. Please try again.');
+        }
+    };
 }

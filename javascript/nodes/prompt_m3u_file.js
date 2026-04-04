@@ -1,28 +1,25 @@
 import { Next } from '../ambler.js';
-import { checkM3UFile } from './check_m3u_file.js';
-import readline from 'readline';
+import { createInterface } from 'readline';
 
-export async function promptM3UFile(state) {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
-    function askForPath() {
-        return new Promise((resolve) => {
-            rl.question('Please enter the path to your M3U file: ', (answer) => {
-                resolve(answer);
-            });
+const defaultUtils = {
+    readLine: () => new Promise((resolve) => {
+        const rl = createInterface({ input: process.stdin });
+        rl.once('line', (line) => {
+            rl.close();
+            resolve(line.trim());
         });
-    }
+    }),
+};
 
-    let m3uFilePath = await askForPath();
-    rl.close();
+export function promptM3UFile(edges, utils = defaultUtils) {
+    return async (state) => {
+        console.log('Please enter the path to your M3U file:');
+        const m3uFilePath = await utils.readLine();
 
-    if (!m3uFilePath) {
-        console.log("No M3U file path provided. Exiting.");
-        return null; // Terminate if empty input
-    }
+        if (!m3uFilePath) {
+            return new Next(promptM3UFile(edges, utils), state);
+        }
 
-    return new Next(checkM3UFile, { ...state, m3uFilePath });
+        return new Next(edges.onCheck, { ...state, m3uFilePath });
+    };
 }
