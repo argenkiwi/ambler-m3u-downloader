@@ -1,14 +1,21 @@
 <?php
 
-function check_m3u_file(State $state): array {
-    global $argv;
-    $m3u_file_path = $argv[1] ?? null;
+function check_m3u_file(array $edges, array $utils = []): callable {
+    $utils += ['stat' => fn($p) => @stat($p)];
 
-    if ($m3u_file_path && file_exists($m3u_file_path) && is_file($m3u_file_path) && pathinfo($m3u_file_path, PATHINFO_EXTENSION) === 'm3u') {
-        $state->m3u_file_path = $m3u_file_path;
-        return [$state, Node::ReadM3UFile];
-    } else {
-        $state->m3u_file_path = null;
-        return [$state, Node::PromptM3UFile];
-    }
+    return function ($state) use ($edges, $utils): Next {
+        $path = $state['m3u_file_path'];
+
+        if ($path) {
+            $info = $utils['stat']($path);
+            if ($info && ($info['mode'] & 0170000) === 0100000 && str_ends_with($path, '.m3u')) {
+                return new Next($edges['on_read'], $state);
+            }
+            if (!$info) {
+                echo "File not found: $path\n";
+            }
+        }
+
+        return new Next($edges['on_prompt'], $state);
+    };
 }

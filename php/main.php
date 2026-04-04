@@ -2,39 +2,31 @@
 
 require_once 'ambler.php';
 require_once 'nodes/check_m3u_file.php';
+require_once 'nodes/prompt_m3u_file.php';
 require_once 'nodes/read_m3u_file.php';
 require_once 'nodes/prompt_options.php';
 require_once 'nodes/list_urls.php';
 require_once 'nodes/resolve_urls.php';
 require_once 'nodes/save_m3u_file.php';
 require_once 'nodes/download_files.php';
-require_once 'nodes/prompt_m3u_file.php';
 
-class State {
-    public ?string $m3u_file_path = null;
-    public array $urls = [];
-}
+$initial_state = [
+    'm3u_file_path' => isset($argv[1]) ? realpath($argv[1]) ?: $argv[1] : null,
+    'urls' => [],
+];
 
-enum Node {
-    case CheckM3UFile;
-    case ReadM3UFile;
-    case PromptOptions;
-    case ListUrls;
-    case ResolveUrls;
-    case SaveM3UFile;
-    case DownloadFiles;
-    case PromptM3UFile;
-}
+// Entry loop (& captures for forward/circular references)
+$check  = node(function () use (&$read, &$prompt) { return check_m3u_file(['on_read' => $read, 'on_prompt' => $prompt]); });
+$read   = node(function () use (&$options) { return read_m3u_file(['on_success' => $options]); });
+$prompt = node(function () use (&$check) { return prompt_m3u_file(['on_check' => $check]); });
 
-amble(new State(), Node::CheckM3UFile, function (Node $node): Step {
-    return match ($node) {
-        Node::CheckM3UFile => new NextStep('check_m3u_file'),
-        Node::ReadM3UFile => new NextStep('read_m3u_file'),
-        Node::PromptOptions => new NextStep('prompt_options'),
-        Node::ListUrls => new NextStep('list_urls'),
-        Node::ResolveUrls => new NextStep('resolve_urls'),
-        Node::SaveM3UFile => new NextStep('save_m3u_file'),
-        Node::DownloadFiles => new NextStep('download_files'),
-        Node::PromptM3UFile => new NextStep('prompt_m3u_file'),
-    };
-});
+// Main menu
+$options   = node(function () use (&$list_node, &$resolve, &$download) { return prompt_options(['on_list' => $list_node, 'on_resolve' => $resolve, 'on_download' => $download]); });
+$list_node = node(function () use (&$options) { return list_urls(['on_success' => $options]); });
+$resolve   = node(function () use (&$save) { return resolve_urls(['on_success' => $save]); });
+$save      = node(function () use (&$options) { return save_m3u_file(['on_success' => $options]); });
+
+// Terminal node
+$download = node(function () { return download_files(['on_success' => fn($_state) => null]); });
+
+amble($check, $initial_state);

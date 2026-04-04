@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"DownloadFilesTest::testCallsDownloaderForEachUrlWithCorrectFolder":0.001,"DownloadFilesTest::testThrowsWhenM3uFilePathIsNull":0,"ResolveUrlsTest::testResolvesOnlyKhinsiderUrlsAndPreservesOrder":0}}

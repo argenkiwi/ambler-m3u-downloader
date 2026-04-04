@@ -1,12 +1,20 @@
 <?php
 
-function prompt_m3u_file(State $state): array {
-    $m3u_file_path = readline('Enter the path to the M3U file: ');
+function prompt_m3u_file(array $edges, array $utils = []): callable {
+    $utils += ['read_line' => function () {
+        echo "Please enter the path to your M3U file:\n";
+        return trim((string) readline());
+    }];
 
-    if (empty($m3u_file_path)) {
-        return [$state, null]; // Terminate if empty input
-    }
+    $self = function ($state) use ($edges, $utils, &$self): Next {
+        $path = $utils['read_line']();
 
-    $state->m3u_file_path = $m3u_file_path;
-    return [$state, Node::CheckM3UFile];
+        if (empty($path)) {
+            return new Next($self, $state);
+        }
+
+        return new Next($edges['on_check'], array_merge($state, ['m3u_file_path' => $path]));
+    };
+
+    return $self;
 }

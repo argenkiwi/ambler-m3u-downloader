@@ -1,37 +1,37 @@
 <?php
 
-function prompt_options(State $state): array {
-    $options = ['list', 'quit'];
-    $khinsider_urls = array_filter($state->urls, fn($url) => strpos($url, 'https://downloads.khinsider.com/game-soundtracks') === 0);
+function prompt_options(array $edges, array $utils = []): callable {
+    $utils += ['read_line' => fn() => trim((string) readline())];
 
-    if (count($khinsider_urls) > 0) {
-        $options[] = 'resolve';
-    } else {
-        $options[] = 'download';
-    }
+    return function ($state) use ($edges, $utils): ?Next {
+        $has_khinsider = (bool) array_filter(
+            $state['urls'],
+            fn($url) => str_starts_with($url, 'https://downloads.khinsider.com/game-soundtracks')
+        );
 
-    echo "\nAvailable options:\n";
-    foreach ($options as $index => $option) {
-        echo ($index + 1) . ". $option\n";
-    }
+        $options = [
+            ['quit', null],
+            ['list', new Next($edges['on_list'], $state)],
+        ];
 
-    $choice = readline('Enter your choice: ');
-    $choice = intval($choice) - 1;
+        if ($has_khinsider) {
+            $options[] = ['resolve', new Next($edges['on_resolve'], $state)];
+        } else {
+            $options[] = ['download', new Next($edges['on_download'], $state)];
+        }
 
-    if (!isset($options[$choice])) {
-        echo "Invalid choice.\n";
-        return [$state, Node::PromptOptions];
-    }
+        while (true) {
+            echo "\nSelect an option:\n";
+            foreach ($options as $i => [$name, $_]) {
+                echo ($i + 1) . ". $name\n";
+            }
 
-    switch ($options[$choice]) {
-        case 'list':
-            return [$state, Node::ListUrls];
-        case 'resolve':
-            return [$state, Node::ResolveUrls];
-        case 'download':
-            return [$state, Node::DownloadFiles];
-        case 'quit':
-            return [$state, null];
-    }
-    return [$state, Node::PromptOptions];
+            $choice = (int) $utils['read_line']() - 1;
+            if ($choice >= 0 && $choice < count($options)) {
+                return $options[$choice][1];
+            }
+
+            echo "Invalid option. Please try again.\n";
+        }
+    };
 }

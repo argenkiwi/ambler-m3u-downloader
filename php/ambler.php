@@ -1,29 +1,26 @@
 <?php
 
-interface Step {
-    public function resolve($state);
-}
+class Next {
+    private $nextFunc;
+    public mixed $state;
 
-class NextStep implements Step {
-    private $delegate;
-
-    public function __construct(callable $delegate) {
-        $this->delegate = $delegate;
+    public function __construct(callable $nextFunc, mixed $state) {
+        $this->nextFunc = $nextFunc;
+        $this->state = $state;
     }
 
-    public function resolve($state) {
-        return call_user_func($this->delegate, $state);
+    public function run(): ?Next {
+        return ($this->nextFunc)($this->state);
     }
 }
 
-function amble($state, $lead, callable $follow) {
-    $currentLead = $lead;
-    $currentState = $state;
+function node(callable $factory): callable {
+    return fn($state) => $factory()($state);
+}
 
-    while ($currentLead !== null) {
-        $step = $follow($currentLead);
-        list($currentState, $currentLead) = $step->resolve($currentState);
+function amble(callable $initial, mixed $state): void {
+    $next = $initial($state);
+    while ($next !== null) {
+        $next = $next->run();
     }
-
-    return $currentState;
 }
