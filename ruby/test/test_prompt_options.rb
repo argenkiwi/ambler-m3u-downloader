@@ -1,66 +1,70 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
-require 'stringio'
-require_relative '../lib/prompt_options'
+require_relative '../lib/ambler'
+require_relative '../nodes/prompt_options'
 
 class TestPromptOptions < Minitest::Test
-  def setup
-    @original_stdout = $stdout
-    @original_stdin = $stdin
-  end
+  def make_node(urls, input_sequence, edges = {})
+    inputs = input_sequence.dup
+    mock_read_line = -> { inputs.shift.to_s.chomp }
 
-  def teardown
-    $stdout = @original_stdout
-    $stdin = @original_stdin
-  end
+    on_list     = edges[:on_list]     || ->(_state) { nil }
+    on_resolve  = edges[:on_resolve]  || ->(_state) { nil }
+    on_download = edges[:on_download] || ->(_state) { nil }
 
-  def with_stdin(input)
-    $stdin = StringIO.new(input)
-    yield
+    state = { m3u_file_path: 'test.m3u', urls: urls }
+    node  = PromptOptions.node({ on_list: on_list, on_resolve: on_resolve, on_download: on_download },
+                               { read_line: mock_read_line })
+    [node, state]
   end
 
   def test_prompt_with_khinsider_urls
     urls = ['https://downloads.khinsider.com/game-soundtracks/album/test/1.mp3']
-    output = StringIO.new
-    $stdout = output
+    captured = []
+    on_resolve = ->(state) { captured << state; nil }
 
-    result = nil
-    with_stdin("r\n") do
-      result = PromptOptions.prompt(urls)
-    end
+    node, state = make_node(urls, ['3'], { on_resolve: on_resolve })
+    result = node.call(state)
 
-    assert_equal :resolve, result
-    assert_match(/r: resolve all URLs/, output.string)
-    refute_match(/d: download all files/, output.string)
+    # resolve is option 3; result should be Next pointing to on_resolve
+    refute_nil result
+    result.run
+    assert_equal 1, captured.length
   end
 
   def test_prompt_without_khinsider_urls
     urls = ['https://example.com/test.mp3']
-    output = StringIO.new
-    $stdout = output
+    captured = []
+    on_download = ->(state) { captured << state; nil }
 
-    result = nil
-    with_stdin("d\n") do
-      result = PromptOptions.prompt(urls)
-    end
+    node, state = make_node(urls, ['3'], { on_download: on_download })
+    result = node.call(state)
 
-    assert_equal :download, result
-    assert_match(/d: download all files/, output.string)
-    refute_match(/r: resolve all URLs/, output.string)
+    refute_nil result
+    result.run
+    assert_equal 1, captured.length
   end
 
-  def test_prompt_with_invalid_input
+  def test_prompt_quit_returns_nil
     urls = ['https://example.com/test.mp3']
-    output = StringIO.new
-    $stdout = output
+    node, state = make_node(urls, ['1'])
+    result = node.call(state)
 
-    result = nil
-    with_stdin("x\nd\n") do
-      result = PromptOptions.prompt(urls)
-    end
+    assert_nil result
+  end
 
-    assert_equal :download, result
-    assert_match(/Invalid option, please try again./, output.string)
+  def test_prompt_with_invalid_input_then_valid
+    urls = ['https://example.com/test.mp3']
+    captured = []
+    on_list = ->(state) { captured << state; nil }
+
+    # 'x' is invalid, then '2' selects list
+    node, state = make_node(urls, %w[x 2], { on_list: on_list })
+    result = node.call(state)
+
+    refute_nil result
+    result.run
+    assert_equal 1, captured.length
   end
 end

@@ -1,70 +1,32 @@
 # frozen_string_literal: true
 
 require_relative 'lib/ambler'
-require_relative 'lib/check_m3u_file'
-require_relative 'lib/download_files'
-require_relative 'lib/list_urls'
-require_relative 'lib/prompt_m3u_file'
-require_relative 'lib/prompt_options'
-require_relative 'lib/read_m3u_file'
-require_relative 'lib/resolve_urls'
-require_relative 'lib/save_m3u_file'
+require_relative 'nodes/check_m3u_file'
+require_relative 'nodes/prompt_m3u_file'
+require_relative 'nodes/read_m3u_file'
+require_relative 'nodes/prompt_options'
+require_relative 'nodes/list_urls'
+require_relative 'nodes/resolve_urls'
+require_relative 'nodes/save_m3u_file'
+require_relative 'nodes/download_files'
 
-initial_m3u_file = ARGV.empty? ? nil : File.expand_path(ARGV.first)
 initial_state = {
-  m3u_file: initial_m3u_file,
+  m3u_file_path: ARGV.empty? ? nil : File.expand_path(ARGV.first),
   urls: []
 }
 
-require 'async'
+# Entry loop
+check   = Ambler.node { CheckM3uFile.node(on_read: read, on_prompt: prompt) }
+read    = Ambler.node { ReadM3uFile.node(on_success: options) }
+prompt  = Ambler.node { PromptM3uFile.node(on_check: check) }
 
-Async do
-  Ambler.amble(initial_state, :check_m3u_file) do |lead, state|
-    case lead
-    when :prompt_options
-      option = PromptOptions.prompt(state[:urls])
-      case option
-      when :download
-        [state, :download_files]
-      when :resolve
-        [state, :resolve_urls]
-      when :list
-        [state, :list_urls]
-      when :quit
-        [state, nil]
-      else
-        [state, :prompt_options]
-      end
-    when :list_urls
-      ListUrls.list(state[:urls])
-      [state, :prompt_options]
-    when :resolve_urls
-      state[:urls] = ResolveUrls.resolve(state[:urls])
-      [state, :save_m3u_file]
-    when :read_m3u_file
-      state[:urls] = ReadM3uFile.read(state[:m3u_file])
-      [state, :prompt_options]
-    when :download_files
-      DownloadFiles.download(state[:m3u_file], state[:urls])
-      [state, nil]
-    when :save_m3u_file
-      SaveM3uFile.save(state[:m3u_file], state[:urls])
-      [state, :prompt_options]
-    when :check_m3u_file
-      if CheckM3uFile.check(state[:m3u_file])
-        [state, :read_m3u_file]
-      else
-        [state, :prompt_m3u_file]
-      end
-    when :prompt_m3u_file
-      state[:m3u_file] = PromptM3uFile.prompt
-      if state[:m3u_file].nil? || state[:m3u_file].empty?
-        [state, nil]
-      else
-        [state, :check_m3u_file]
-      end
-    end
-  end
-end
+# Main menu
+options   = Ambler.node { PromptOptions.node(on_list: list_node, on_resolve: resolve, on_download: download) }
+list_node = Ambler.node { ListUrls.node(on_success: options) }
+resolve   = Ambler.node { ResolveUrls.node(on_success: save) }
+save      = Ambler.node { SaveM3uFile.node(on_success: options) }
 
-puts 'Application finished.'
+# Terminal node
+download = Ambler.node { DownloadFiles.node(on_success: ->(_state) { nil }) }
+
+Ambler.amble(check, initial_state)

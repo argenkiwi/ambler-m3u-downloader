@@ -6,3 +6,7 @@ gem 'async'
 gem 'async-http'
 gem 'httparty'
 gem 'nokogiri'
+
+group :test do
+  gem 'minitest'
+end
