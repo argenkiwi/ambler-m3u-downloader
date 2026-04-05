@@ -13,7 +13,8 @@ const initialState: State = {
   urls: [],
 };
 
-const download = node(() => downloadFiles({ onSuccess: (_state: State) => null }));
+const savePlaylist = node(() => saveM3UFile({ onSuccess: (_state: State) => null }));
+const download = node(() => downloadFiles({ onSuccess: savePlaylist }));
 const promptDl = node(() => promptDownload({ onDownload: download }));
 const save = node(() => saveM3UFile({ onSuccess: promptDl }));
 const resolve = node(() => resolveUrls({ onSuccess: save }));

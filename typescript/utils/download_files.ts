@@ -1,15 +1,14 @@
 export async function downloadFile(
   url: string,
   outputFolder: string,
-): Promise<void> {
+): Promise<string> {
+  const filename = decodeURIComponent(url.substring(url.lastIndexOf("/") + 1));
+  const outputPath = `${outputFolder}/${filename}`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to download ${url}: ${response.statusText}`);
     }
-
-    const filename = url.substring(url.lastIndexOf("/") + 1);
-    const outputPath = `${outputFolder}/${filename}`;
 
     await Deno.mkdir(outputFolder, { recursive: true });
     await Deno.writeFile(
@@ -20,4 +19,5 @@ export async function downloadFile(
   } catch (error) {
     console.error(`Error downloading ${url}: ${error instanceof Error ? error.message : String(error)}`);
   }
+  return outputPath;
 }
