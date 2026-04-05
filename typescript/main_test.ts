@@ -1,4 +1,4 @@
-import { amble, lazy, Next, Nextable } from "./ambler.ts";
+import { amble, node as lazy, Next, Nextable } from "./ambler.ts";
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 Deno.test("amble function works correctly", async () => {

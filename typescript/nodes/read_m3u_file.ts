@@ -1,7 +1,7 @@
 import { Next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
 
-type ReadEdges = { onSuccess: Nextable<State> };
+type ReadEdges = { onResolve: Nextable<State>; onDownload: Nextable<State> };
 type ReadUtils = { readTextFile: (path: string) => Promise<string> };
 
 const defaultUtils: ReadUtils = {
@@ -22,7 +22,15 @@ export function readM3UFile(
       .map((line) => line.trim())
       .filter((line) => line.length > 0 && !line.startsWith("#"));
 
-    console.log(`Found ${urls.length} URLs in ${state.m3uFilePath}`);
-    return new Next(edges.onSuccess, { ...state, urls });
+    console.log(`\n--- URLs ---`);
+    urls.forEach((url) => console.log(url));
+    console.log("------------");
+
+    const nextState = { ...state, urls };
+    const hasKhinsiderUrls = urls.some((url) =>
+      url.startsWith("https://downloads.khinsider.com/game-soundtracks")
+    );
+
+    return new Next(hasKhinsiderUrls ? edges.onResolve : edges.onDownload, nextState);
   };
 }

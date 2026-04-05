@@ -20,6 +20,11 @@ export function saveM3UFile(
     const content = state.urls.join("\n");
     await utils.writeTextFile(state.m3uFilePath, content);
     console.log(`Saved resolved URLs to ${state.m3uFilePath}`);
+
+    console.log(`\n--- URLs ---`);
+    state.urls.forEach((url) => console.log(url));
+    console.log("------------");
+
     return new Next(edges.onSuccess, state);
   };
 }
