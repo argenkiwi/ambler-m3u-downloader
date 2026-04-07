@@ -16,21 +16,19 @@ const initialState: State = {
   urls: [],
 };
 
-// Entry loop
-const check: Nextable<State> = node(() => checkM3UFile({ onRead: read, onPrompt: prompt }));
-const read: Nextable<State> = node(() => readM3UFile({ onSuccess: options }))
-const prompt: Nextable<State> = node(() => promptM3UFile({ onCheck: check }));
-
-// Main menu
-const exit: Nextable<State> = node(() => goodbye());
-const options: Nextable<State> = node(() => promptOptions({ onList: list, onResolve: resolve, onDownload: download, onExit: exit }));
-const list: Nextable<State> = node(() => listUrls({ onSuccess: options }));
-const resolve: Nextable<State> = node(() => resolveUrls({ onSuccess: save }));
-const save: Nextable<State> = node(() => saveM3UFile({ onSuccess: options }));
-
-// Terminal node
-const download: Nextable<State> = node(() => downloadFiles({ onSuccess: exit }));
+// Nodes
+const nodes: Record<string, Nextable<State>> = {
+  check: node(() => checkM3UFile({ onRead: nodes.read, onPrompt: nodes.prompt })),
+  read: node(() => readM3UFile({ onSuccess: nodes.options })),
+  prompt: node(() => promptM3UFile({ onCheck: nodes.check })),
+  exit: node(() => goodbye()),
+  options: node(() => promptOptions({ onList: nodes.list, onResolve: nodes.resolve, onDownload: nodes.download, onExit: nodes.exit })),
+  list: node(() => listUrls({ onSuccess: nodes.options })),
+  resolve: node(() => resolveUrls({ onSuccess: nodes.save })),
+  save: node(() => saveM3UFile({ onSuccess: nodes.options })),
+  download: node(() => downloadFiles({ onSuccess: nodes.exit })),
+};
 
 if (import.meta.main) {
-  await amble(check, initialState);
+  await amble(nodes.check, initialState);
 }
