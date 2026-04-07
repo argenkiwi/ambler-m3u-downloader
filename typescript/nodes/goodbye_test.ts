@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { goodbye } from "./goodbye.ts";
+import { Goodbye } from "./goodbye.ts";
 
 Deno.test("goodbye node logs gratitude and returns null", async () => {
   let loggedMessage = "";
@@ -9,7 +9,7 @@ Deno.test("goodbye node logs gratitude and returns null", async () => {
     },
   };
 
-  const node = goodbye(mockUtils);
+  const node = Goodbye.create(mockUtils);
   const next = await node({});
 
   assertEquals(loggedMessage, "\nThank you for using the M3U Downloader! Have a great day!");

@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { downloadFiles } from "./download_files.ts";
+import { DownloadFiles } from "./download_files.ts";
 import { State } from "../state.ts";
-import { Next, Nextable } from "../ambler.ts";
+import { Nextable } from "../ambler.ts";
 
 Deno.test("downloadFiles should call downloader for each URL and transition to onSuccess", async () => {
   const downloaded: { url: string; folder: string }[] = [];
@@ -20,7 +20,7 @@ Deno.test("downloadFiles should call downloader for each URL and transition to o
     return null;
   };
 
-  const node = downloadFiles(
+  const node = DownloadFiles.create(
     { onSuccess },
     { downloader: mockDownloader }
   );
@@ -47,7 +47,7 @@ Deno.test("downloadFiles should throw an error if m3uFilePath is missing", async
     urls: ["http://example.com/1.mp3"],
   };
 
-  const node = downloadFiles(
+  const node = DownloadFiles.create(
     { onSuccess },
     { downloader: mockDownloader }
   );

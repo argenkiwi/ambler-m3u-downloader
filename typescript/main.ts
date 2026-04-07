@@ -1,15 +1,14 @@
-import { amble, node } from "./ambler.ts";
+import { amble, node, Nextable } from "./ambler.ts";
 import { State } from "./state.ts";
-import { checkM3UFile } from "./nodes/check_m3u_file.ts";
-import { promptM3UFile } from "./nodes/prompt_m3u_file.ts";
-import { readM3UFile } from "./nodes/read_m3u_file.ts";
-import { promptOptions } from "./nodes/prompt_options.ts";
-import { listUrls } from "./nodes/list_urls.ts";
-import { resolveUrls } from "./nodes/resolve_urls.ts";
-import { saveM3UFile } from "./nodes/save_m3u_file.ts";
-import { downloadFiles } from "./nodes/download_files.ts";
-import { goodbye } from "./nodes/goodbye.ts";
-import { Nextable } from "./ambler.ts";
+import { CheckM3UFile } from "./nodes/check_m3u_file.ts";
+import { PromptM3UFile } from "./nodes/prompt_m3u_file.ts";
+import { ReadM3UFile } from "./nodes/read_m3u_file.ts";
+import { PromptOptions } from "./nodes/prompt_options.ts";
+import { ListUrls } from "./nodes/list_urls.ts";
+import { ResolveUrls } from "./nodes/resolve_urls.ts";
+import { SaveM3UFile } from "./nodes/save_m3u_file.ts";
+import { DownloadFiles } from "./nodes/download_files.ts";
+import { Goodbye } from "./nodes/goodbye.ts";
 
 const initialState: State = {
   m3uFilePath: Deno.args[0] || null,
@@ -18,15 +17,15 @@ const initialState: State = {
 
 // Nodes
 const nodes: Record<string, Nextable<State>> = {
-  check: node(() => checkM3UFile({ onRead: nodes.read, onPrompt: nodes.prompt })),
-  read: node(() => readM3UFile({ onSuccess: nodes.options })),
-  prompt: node(() => promptM3UFile({ onCheck: nodes.check })),
-  exit: node(() => goodbye()),
-  options: node(() => promptOptions({ onList: nodes.list, onResolve: nodes.resolve, onDownload: nodes.download, onExit: nodes.exit })),
-  list: node(() => listUrls({ onSuccess: nodes.options })),
-  resolve: node(() => resolveUrls({ onSuccess: nodes.save })),
-  save: node(() => saveM3UFile({ onSuccess: nodes.options })),
-  download: node(() => downloadFiles({ onSuccess: nodes.exit })),
+  check: node(() => CheckM3UFile.create({ onRead: nodes.read, onPrompt: nodes.prompt })),
+  read: node(() => ReadM3UFile.create({ onSuccess: nodes.options })),
+  prompt: node(() => PromptM3UFile.create({ onCheck: nodes.check })),
+  exit: node(() => Goodbye.create()),
+  options: node(() => PromptOptions.create({ onList: nodes.list, onResolve: nodes.resolve, onDownload: nodes.download, onExit: nodes.exit })),
+  list: node(() => ListUrls.create({ onSuccess: nodes.options })),
+  resolve: node(() => ResolveUrls.create({ onSuccess: nodes.save })),
+  save: node(() => SaveM3UFile.create({ onSuccess: nodes.options })),
+  download: node(() => DownloadFiles.create({ onSuccess: nodes.exit })),
 };
 
 if (import.meta.main) {

@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { resolveUrls } from "./resolve_urls.ts";
+import { ResolveUrls } from "./resolve_urls.ts";
 import { State } from "../state.ts";
-import { Next, Nextable } from "../ambler.ts";
+import { Nextable } from "../ambler.ts";
 
 Deno.test("resolveUrls should resolve only Khinsider URLs using provided resolver", async () => {
   // Mock dependencies
@@ -29,12 +29,12 @@ Deno.test("resolveUrls should resolve only Khinsider URLs using provided resolve
     return null;
   };
 
-  const nodeWithCapture = resolveUrls(
+  const nodeWithCapture = ResolveUrls.create(
     { onSuccess: capturingOnSuccess },
     { resolver: mockResolver }
   );
   const nextWithCapture = await nodeWithCapture(initialState);
-  
+
   if (!nextWithCapture) {
     throw new Error("Expected Next object, got null");
   }
