@@ -1,7 +1,10 @@
 import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
 
-type PromptEdges = { onCheck: Nextable<State> };
+export interface PromptM3UFileState {
+  m3uFilePath: string | null;
+}
+
+type PromptEdges<S> = { onCheck: Nextable<S> };
 type PromptUtils = { readLine: () => Promise<string> };
 
 const defaultUtils: PromptUtils = {
@@ -11,11 +14,11 @@ const defaultUtils: PromptUtils = {
   },
 };
 
-export function promptM3UFile(
-  edges: PromptEdges,
+export function promptM3UFile<S extends PromptM3UFileState>(
+  edges: PromptEdges<S>,
   utils: PromptUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State>> => {
+): Nextable<S> {
+  return async (state: S): Promise<Next<S>> => {
     console.log("Please enter the path to your M3U file:");
     const m3uFilePath = await utils.readLine();
 

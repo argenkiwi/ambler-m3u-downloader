@@ -1,11 +1,14 @@
 import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
 import { readLines } from "https://deno.land/std@0.224.0/io/mod.ts";
 
-type OptionsEdges = {
-  onList: Nextable<State>;
-  onResolve: Nextable<State>;
-  onDownload: Nextable<State>;
+export interface PromptOptionsState {
+  urls: string[];
+}
+
+type OptionsEdges<S> = {
+  onList: Nextable<S>;
+  onResolve: Nextable<S>;
+  onDownload: Nextable<S>;
 };
 type OptionsUtils = { readLine: () => Promise<string> };
 
@@ -18,16 +21,16 @@ const defaultUtils: OptionsUtils = {
   },
 };
 
-export function promptOptions(
-  edges: OptionsEdges,
+export function promptOptions<S extends PromptOptionsState>(
+  edges: OptionsEdges<S>,
   utils: OptionsUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State> | null> => {
+): Nextable<S> {
+  return async (state: S): Promise<Next<S> | null> => {
     const hasKhinsiderUrls = state.urls.some((url) =>
       url.startsWith("https://downloads.khinsider.com/game-soundtracks")
     );
 
-    const options: { name: string; value: Next<State> | null }[] = [
+    const options: { name: string; value: Next<S> | null }[] = [
       { name: "quit", value: null },
       { name: "list", value: new Next(edges.onList, state) },
     ];

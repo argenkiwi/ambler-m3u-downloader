@@ -1,18 +1,22 @@
 import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
 
-type SaveEdges = { onSuccess: Nextable<State> };
+export interface SaveM3UFileState {
+  m3uFilePath: string | null;
+  urls: string[];
+}
+
+type SaveEdges<S> = { onSuccess: Nextable<S> };
 type SaveUtils = { writeTextFile: (path: string, content: string) => Promise<void> };
 
 const defaultUtils: SaveUtils = {
   writeTextFile: (path, content) => Deno.writeTextFile(path, content),
 };
 
-export function saveM3UFile(
-  edges: SaveEdges,
+export function saveM3UFile<S extends SaveM3UFileState>(
+  edges: SaveEdges<S>,
   utils: SaveUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State>> => {
+): Nextable<S> {
+  return async (state: S): Promise<Next<S>> => {
     if (!state.m3uFilePath) {
       throw new Error("M3U file path is not defined.");
     }

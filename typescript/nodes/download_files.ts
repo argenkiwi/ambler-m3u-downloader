@@ -1,17 +1,21 @@
 import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
 import { downloadFile } from "../utils/download_files.ts";
 
-type DownloadEdges = { onSuccess: Nextable<State> };
+export interface DownloadFilesState {
+  m3uFilePath: string | null;
+  urls: string[];
+}
+
+type DownloadEdges<S> = { onSuccess: Nextable<S> };
 type DownloadUtils = { downloader: (url: string, outputFolder: string) => Promise<void> };
 
 const defaultUtils: DownloadUtils = { downloader: downloadFile };
 
-export function downloadFiles(
-  edges: DownloadEdges,
+export function downloadFiles<S extends DownloadFilesState>(
+  edges: DownloadEdges<S>,
   utils: DownloadUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State> | null> => {
+): Nextable<S> {
+  return async (state: S): Promise<Next<S> | null> => {
     if (!state.m3uFilePath) {
       throw new Error("M3U file path is not defined.");
     }

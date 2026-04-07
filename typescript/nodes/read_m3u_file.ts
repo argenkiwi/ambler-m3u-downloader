@@ -1,18 +1,22 @@
 import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
 
-type ReadEdges = { onSuccess: Nextable<State> };
+export interface ReadM3UFileState {
+  m3uFilePath: string | null;
+  urls: string[];
+}
+
+type ReadEdges<S> = { onSuccess: Nextable<S> };
 type ReadUtils = { readTextFile: (path: string) => Promise<string> };
 
 const defaultUtils: ReadUtils = {
   readTextFile: (path) => Deno.readTextFile(path),
 };
 
-export function readM3UFile(
-  edges: ReadEdges,
+export function readM3UFile<S extends ReadM3UFileState>(
+  edges: ReadEdges<S>,
   utils: ReadUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State>> => {
+): Nextable<S> {
+  return async (state: S): Promise<Next<S>> => {
     if (!state.m3uFilePath) {
       throw new Error("M3U file path is not defined.");
     }

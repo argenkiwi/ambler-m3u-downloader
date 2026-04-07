@@ -1,18 +1,21 @@
 import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
 
-type CheckEdges = { onRead: Nextable<State>; onPrompt: Nextable<State> };
+export interface CheckM3UFileState {
+  m3uFilePath: string | null;
+}
+
+type CheckEdges<S> = { onRead: Nextable<S>; onPrompt: Nextable<S> };
 type CheckUtils = { stat: (path: string) => Promise<Deno.FileInfo> };
 
 const defaultUtils: CheckUtils = {
   stat: (path) => Deno.stat(path),
 };
 
-export function checkM3UFile(
-  edges: CheckEdges,
+export function checkM3UFile<S extends CheckM3UFileState>(
+  edges: CheckEdges<S>,
   utils: CheckUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State>> => {
+): Nextable<S> {
+  return async (state: S): Promise<Next<S>> => {
     const { m3uFilePath } = state;
 
     if (m3uFilePath) {
