@@ -9,6 +9,7 @@ type OptionsEdges<S> = {
   onList: Nextable<S>;
   onResolve: Nextable<S>;
   onDownload: Nextable<S>;
+  onExit: Nextable<S>;
 };
 type OptionsUtils = { readLine: () => Promise<string> };
 
@@ -31,7 +32,7 @@ export function promptOptions<S extends PromptOptionsState>(
     );
 
     const options: { name: string; value: Next<S> | null }[] = [
-      { name: "quit", value: null },
+      { name: "quit", value: new Next(edges.onExit, state) },
       { name: "list", value: new Next(edges.onList, state) },
     ];
 
