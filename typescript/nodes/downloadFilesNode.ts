@@ -1,5 +1,5 @@
 import { next, Nextable } from "../ambler.ts";
-import { basename } from "https://deno.land/std@0.224.0/path/mod.ts";
+import { basename, resolve } from "https://deno.land/std@0.224.0/path/mod.ts";
 import { downloadFile } from "../utils/download_file.ts";
 
 export interface State {
@@ -42,7 +42,7 @@ export function create<S extends State>(
     const newState = {
       ...state,
       m3uFilePath: `${outputFolder}/playlist.m3u`,
-      urls: localPaths.map((p) => `file://${p}`),
+      urls: localPaths.map((p) => `file://${resolve(p)}`),
     };
 
     return next(edges.onSuccess, newState);
