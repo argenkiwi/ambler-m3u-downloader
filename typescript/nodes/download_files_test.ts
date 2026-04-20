@@ -1,4 +1,7 @@
-import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import {
+  assertEquals,
+  assertRejects,
+} from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { downloadFiles } from "./download_files.ts";
 import { State } from "../state.ts";
 import { Next, Nextable } from "../ambler.ts";
@@ -22,7 +25,7 @@ Deno.test("downloadFiles should call downloader for each URL and transition to o
 
   const node = downloadFiles(
     { onSuccess },
-    { downloader: mockDownloader }
+    { downloader: mockDownloader },
   );
   const next = await node(initialState);
 
@@ -33,8 +36,14 @@ Deno.test("downloadFiles should call downloader for each URL and transition to o
   await next.run();
 
   assertEquals(downloaded.length, 2);
-  assertEquals(downloaded[0], { url: "http://example.com/1.mp3", folder: "my-playlist" });
-  assertEquals(downloaded[1], { url: "http://example.com/2.mp3", folder: "my-playlist" });
+  assertEquals(downloaded[0], {
+    url: "http://example.com/1.mp3",
+    folder: "my-playlist",
+  });
+  assertEquals(downloaded[1], {
+    url: "http://example.com/2.mp3",
+    folder: "my-playlist",
+  });
   assertEquals(capturedState, initialState);
 });
 
@@ -49,12 +58,12 @@ Deno.test("downloadFiles should throw an error if m3uFilePath is missing", async
 
   const node = downloadFiles(
     { onSuccess },
-    { downloader: mockDownloader }
+    { downloader: mockDownloader },
   );
 
   await assertRejects(
     () => node(initialState),
     Error,
-    "M3U file path is not defined."
+    "M3U file path is not defined.",
   );
 });

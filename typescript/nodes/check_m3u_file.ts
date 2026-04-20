@@ -1,35 +1,42 @@
-import { Next, Nextable } from "../ambler.ts";
-import { State } from "../state.ts";
+import { next, Nextable } from "../ambler.ts";
 
-type CheckEdges = { onRead: Nextable<State>; onPrompt: Nextable<State> };
-type CheckUtils = { stat: (path: string) => Promise<Deno.FileInfo> };
+type State = { m3uFilePath: string };
+type Edges<S extends State> = {
+  onRead: Nextable<S>;
+  onPrompt: Nextable<S>;
+};
 
-const defaultUtils: CheckUtils = {
+type Utils = { stat: (path: string) => Promise<Deno.FileInfo> };
+
+const defaultUtils: Utils = {
   stat: (path) => Deno.stat(path),
 };
 
-export function checkM3UFile(
-  edges: CheckEdges,
-  utils: CheckUtils = defaultUtils
-): Nextable<State> {
-  return async (state: State): Promise<Next<State>> => {
+export function create<S extends State>(
+  edges: Edges<S>,
+  utils: Utils = defaultUtils,
+) {
+  return async (state: S) => {
     const { m3uFilePath } = state;
-
     if (m3uFilePath) {
       try {
         const fileInfo = await utils.stat(m3uFilePath);
         if (fileInfo.isFile && m3uFilePath.endsWith(".m3u")) {
-          return new Next(edges.onRead, state);
+          return next(edges.onRead, state);
         }
       } catch (error) {
         if (error instanceof Deno.errors.NotFound) {
           console.log(`File not found: ${m3uFilePath}`);
         } else {
-          console.log(`Error accessing file: ${error instanceof Error ? error.message : String(error)}`);
+          console.log(
+            `Error accessing file: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
         }
       }
     }
 
-    return new Next(edges.onPrompt, state);
+    return next(edges.onPrompt, state);
   };
 }

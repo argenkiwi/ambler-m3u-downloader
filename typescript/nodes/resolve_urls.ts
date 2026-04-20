@@ -1,4 +1,4 @@
-import { Next, Nextable } from "../ambler.ts";
+import { Next, next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
 import { resolveKhinsiderUrl } from "../utils/resolve_khinsider_url.ts";
 
@@ -9,8 +9,8 @@ const defaultUtils: ResolveUtils = { resolver: resolveKhinsiderUrl };
 
 export function resolveUrls(
   edges: ResolveEdges,
-  utils: ResolveUtils = defaultUtils
-): Nextable<State> {
+  utils: ResolveUtils = defaultUtils,
+) {
   return async (state: State): Promise<Next<State>> => {
     console.log("Resolving Khinsider URLs...");
     const resolvedUrls = await Promise.all(state.urls.map(async (url) => {
@@ -21,6 +21,6 @@ export function resolveUrls(
       }
     }));
     console.log("Finished resolving URLs.");
-    return new Next(edges.onSuccess, { ...state, urls: resolvedUrls });
+    return next(edges.onSuccess, { ...state, urls: resolvedUrls });
   };
 }

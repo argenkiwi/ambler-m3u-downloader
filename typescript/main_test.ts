@@ -3,7 +3,7 @@ import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 Deno.test("amble function works correctly", async () => {
   let callCount = 0;
-  
+
   const stop: Nextable<number> = async (state: number) => {
     callCount++;
     return null;

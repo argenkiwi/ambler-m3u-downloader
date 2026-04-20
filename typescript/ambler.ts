@@ -1,11 +1,13 @@
-export type Nextable<S> = (state: S) => Promise<Next<S> | null>;
+export type MaybePromise<T> = T | Promise<T>;
 
-export class Next<S> {
-    constructor(private nextFunc: Nextable<S>, private state: S) {}
+export type Nextable<S> = (state: S) => MaybePromise<Next<S> | null>;
 
-    run(): Promise<Next<S> | null> {
-        return this.nextFunc(this.state);
-    }
+export interface Next<S> {
+  run(): MaybePromise<Next<S> | null>;
+}
+
+export function next<S>(nextFunc: Nextable<S>, state: S): Next<S> {
+  return { run: () => nextFunc(state) };
 }
 
 export function node<S>(factory: () => Nextable<S>): Nextable<S> {
@@ -13,8 +15,8 @@ export function node<S>(factory: () => Nextable<S>): Nextable<S> {
 }
 
 export async function amble<S>(initial: Nextable<S>, state: S): Promise<void> {
-    let next: Next<S> | null = await initial(state);
-    while (next) {
-        next = await next.run();
-    }
+  let step: Next<S> | null = await initial(state);
+  while (step) {
+    step = await step.run();
+  }
 }

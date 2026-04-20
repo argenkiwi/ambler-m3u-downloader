@@ -1,4 +1,4 @@
-import { Next, Nextable } from "../ambler.ts";
+import { next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
 import { readLines } from "https://deno.land/std@0.224.0/io/mod.ts";
 
@@ -20,7 +20,7 @@ const defaultUtils: OptionsUtils = {
 
 export function promptOptions(
   edges: OptionsEdges,
-  utils: OptionsUtils = defaultUtils
+  utils: OptionsUtils = defaultUtils,
 ): Nextable<State> {
   return async (state: State): Promise<Next<State> | null> => {
     const hasKhinsiderUrls = state.urls.some((url) =>
@@ -33,9 +33,9 @@ export function promptOptions(
     ];
 
     if (hasKhinsiderUrls) {
-      options.push({ name: "resolve", value: new Next(edges.onResolve, state) });
+      options.push({ name: "resolve", value: next(edges.onResolve, state) });
     } else {
-      options.push({ name: "download", value: new Next(edges.onDownload, state) });
+      options.push({ name: "download", value: next(edges.onDownload, state) });
     }
 
     while (true) {

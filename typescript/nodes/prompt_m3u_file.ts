@@ -1,4 +1,4 @@
-import { Next, Nextable } from "../ambler.ts";
+import { Next, next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
 
 type PromptEdges = { onCheck: Nextable<State> };
@@ -13,7 +13,7 @@ const defaultUtils: PromptUtils = {
 
 export function promptM3UFile(
   edges: PromptEdges,
-  utils: PromptUtils = defaultUtils
+  utils: PromptUtils = defaultUtils,
 ): Nextable<State> {
   return async (state: State): Promise<Next<State>> => {
     console.log("Please enter the path to your M3U file:");
@@ -21,9 +21,9 @@ export function promptM3UFile(
 
     if (!m3uFilePath) {
       // Re-prompt if empty
-      return new Next(promptM3UFile(edges, utils), state);
+      return next(promptM3UFile(edges, utils), state);
     }
 
-    return new Next(edges.onCheck, { ...state, m3uFilePath });
+    return next(edges.onCheck, { ...state, m3uFilePath });
   };
 }

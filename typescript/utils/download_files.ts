@@ -18,6 +18,10 @@ export async function downloadFile(
     );
     console.log(`Downloaded: ${filename} to ${outputFolder}`);
   } catch (error) {
-    console.error(`Error downloading ${url}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error downloading ${url}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }

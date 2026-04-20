@@ -14,7 +14,9 @@
 
 const dest = Deno.args[0];
 if (!dest) {
-  console.error("Usage: deno run --allow-read --allow-write init.ts <destination-dir>");
+  console.error(
+    "Usage: deno run --allow-read --allow-write init.ts <destination-dir>",
+  );
   Deno.exit(1);
 }
 
@@ -45,7 +47,10 @@ const denoJson = {
     "@std/assert": "jsr:@std/assert@1",
   },
 };
-await Deno.writeTextFile(`${dest}/deno.json`, JSON.stringify(denoJson, null, 2) + "\n");
+await Deno.writeTextFile(
+  `${dest}/deno.json`,
+  JSON.stringify(denoJson, null, 2) + "\n",
+);
 
 // ---------------------------------------------------------------------------
 // AGENTS.md
@@ -241,4 +246,6 @@ console.log(`  ${dest}/utils/`);
 console.log();
 console.log("Next steps:");
 console.log("  1. Edit AGENTS.md — fill in your State fields and node table");
-console.log("  2. Hand AGENTS.md to an LLM to generate state.ts, main.ts, and nodes/");
+console.log(
+  "  2. Hand AGENTS.md to an LLM to generate state.ts, main.ts, and nodes/",
+);

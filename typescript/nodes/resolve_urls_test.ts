@@ -13,13 +13,13 @@ Deno.test("resolveUrls should resolve only Khinsider URLs using provided resolve
     m3uFilePath: "test.m3u",
     urls: [
       "https://downloads.khinsider.com/game-soundtracks/game1/song1.mp3",
-      "https://example.com/other.mp3"
-    ]
+      "https://example.com/other.mp3",
+    ],
   };
 
   const expectedUrls = [
     "resolved-https://downloads.khinsider.com/game-soundtracks/game1/song1.mp3",
-    "https://example.com/other.mp3"
+    "https://example.com/other.mp3",
   ];
 
   // To verify the state was passed correctly, we can modify mockOnSuccess to capture it
@@ -31,10 +31,10 @@ Deno.test("resolveUrls should resolve only Khinsider URLs using provided resolve
 
   const nodeWithCapture = resolveUrls(
     { onSuccess: capturingOnSuccess },
-    { resolver: mockResolver }
+    { resolver: mockResolver },
   );
   const nextWithCapture = await nodeWithCapture(initialState);
-  
+
   if (!nextWithCapture) {
     throw new Error("Expected Next object, got null");
   }

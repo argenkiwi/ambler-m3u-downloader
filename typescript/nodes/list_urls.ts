@@ -1,15 +1,13 @@
-import { Next, Nextable } from "../ambler.ts";
+import { next, Nextable } from "../ambler.ts";
 import { State } from "../state.ts";
 
 type ListEdges = { onSuccess: Nextable<State> };
 
-export function listUrls(
-  edges: ListEdges
-): Nextable<State> {
-  return async (state: State): Promise<Next<State>> => {
+export function listUrls(edges: ListEdges) {
+  return (state: State) => {
     console.log("\n--- URLs ---");
     state.urls.forEach((url) => console.log(url));
     console.log("------------");
-    return new Next(edges.onSuccess, state);
+    return next(edges.onSuccess, state);
   };
 }
