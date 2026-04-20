@@ -1,0 +1,126 @@
+---
+name: add-node
+description: Creates a new Ambler node in the nodes/ directory following the established flat-export State/Edges/Utils/create pattern. Use this when the user wants to add a new state-machine node to the project.
+metadata:
+  author: leandro
+  version: "1.1"
+---
+
+# Add Node
+
+Follow these steps to create a new node in the `nodes/` directory.
+
+## 1. Gather requirements
+
+Before writing any code, determine:
+
+- **Node name**: The purpose of the node (e.g., `retry`, `prompt`, `validate`). The file will be named `<name>Node.ts`.
+- **State shape**: What fields does this node read or mutate? Every node has a minimum `State` interface that must include the fields it touches. Other walk-level state fields flow through untouched via the `S extends State` generic.
+- **Edges**: What named transitions can this node take? Terminal nodes have no edges and always return `null`. Non-terminal nodes declare an `Edges<S extends State>` type whose values are `Nextable<S>`.
+- **Utils**: What side-effectful operations does the node perform? List them (e.g., `print`, `readLine`, `sleep`, `random`, `fetch`). Each becomes a field on the `Utils` type with a sensible production default in `defaultUtils`.
+- **Behavior**: What does the node do, step by step, and how does it choose which edge to follow?
+
+If any of the above is unclear, ask the user before writing code.
+
+---
+
+## 2. Create `nodes/<name>Node.ts`
+
+Use the following structure exactly. Do not deviate from naming conventions.
+
+```typescript
+import { next, Nextable } from "../ambler.ts";
+// Also import MaybePromise if any util can be sync or async:
+// import { next, Nextable, MaybePromise } from "../ambler.ts";
+
+export interface State {
+  // Fields this node reads or writes — at minimum.
+  // Keep this minimal; the generic S extends State carries the rest.
+}
+
+// Omit Edges entirely for terminal nodes.
+export type Edges<S extends State> = {
+  onSuccess: Nextable<S>;  // rename/add edge names as appropriate
+  // onError: Nextable<S>;
+};
+
+export type Utils = {
+  // One field per side-effectful operation.
+  // Use function signatures that match real stdlib equivalents.
+  print: (msg: string) => void;
+  // readLine: (prompt: string) => MaybePromise<string | null>;
+  // sleep: (ms: number) => Promise<void>;
+  // random: () => number;
+};
+
+const defaultUtils: Utils = {
+  print: (msg) => console.log(msg),
+  // readLine: (msg) => prompt(msg),
+  // sleep: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+  // random: () => Math.random(),
+};
+
+// Non-terminal node (has edges):
+export function create<S extends State>(
+  edges: Edges<S>,
+  utils: Utils = defaultUtils,
+): Nextable<S> {
+  return async (state: S) => {
+    // Node logic here.
+    // Always spread state when updating: { ...state, field: newValue }
+    // Return next(edges.onEdgeName, nextState) to transition.
+    // Return null to terminate (only if this is actually a terminal node).
+  };
+}
+
+// Terminal node variant (no edges — replace the above with this):
+// export function create<S extends State>(
+//   utils: Utils = defaultUtils,
+// ): Nextable<S> {
+//   return async (state: S) => {
+//     // Terminal logic.
+//     return null;
+//   };
+// }
+```
+
+### Key rules
+
+- **Always import from `"../ambler.ts"`** — import `next` and `Nextable` for non-terminal nodes. Import `MaybePromise` if any util type is sync-or-async (e.g. `readLine`). Terminal nodes with no edges may not need any import from `ambler.ts`.
+- **Do not import `Next`** — the return type of the inner function is inferred from `Nextable<S>`; no explicit annotation is needed.
+- **Exports are flat at module level** — no namespace wrapper. Walks import the module with `import * as MyNode from "../nodes/myNode.ts"`, which gives `MyNode.State`, `MyNode.create`, etc.
+- **`State` is a minimum interface** — only include fields this node actually uses. The generic `S extends State` allows the walk to pass a richer state type without breaking the type system.
+- **`Edges<S extends State>` uses the same generic** so that edge functions accept the full walk state, not just the node's minimum state.
+- **`defaultUtils` provides production implementations** — these are what run in the real walk. Tests always inject mock utils.
+- **State is immutable** — never mutate `state` directly; always return `{ ...state, field: value }`.
+- **Return `next(edges.onEdgeName, nextState)`** (function call) to transition; return `null` only from terminal nodes.
+
+---
+
+## 3. Create `nodes/<name>Node.test.ts`
+
+Use the `/add-node-test` skill to generate the test file for this node.
+
+---
+
+## 4. Checklist before finishing
+
+- [ ] `nodes/<name>Node.ts` exists and compiles (no TypeScript errors).
+- [ ] `nodes/<name>Node.test.ts` exists with one test per branch.
+- [ ] All exports are flat module-level (`export interface State`, `export type Edges`, `export function create`) — no namespace wrapper.
+- [ ] `State`, `Edges` (if non-terminal), `Utils`, `defaultUtils`, and `create` are all exported or defined.
+- [ ] No barrel/index file was created or modified — nodes are imported individually.
+- [ ] State is never mutated in place.
+- [ ] All utils in `defaultUtils` use real production implementations (`console.log`, `prompt`, `Math.random`, `setTimeout`, etc.).
+
+---
+
+## 5. Reference: the three node archetypes
+
+| Archetype | Has Edges | Returns null | Typical use |
+|---|---|---|---|
+| Entry node | Yes (e.g. `onSuccess`, `onError`) | Never directly | Prompts input, validates, branches on outcome |
+| Loop/transform node | Yes (e.g. `onContinue`, `onStop`) | Never directly | Performs work, conditionally loops or exits |
+| Terminal node | No | Always | Displays final result and terminates the walk |
+
+When unsure which archetype fits, ask the user whether the new node should loop, branch, or terminate the walk.
