@@ -1,45 +1,52 @@
 # Program Specifications
 
-Downloads all audio files listed in an M3U playlist. Optionally resolves khinsider URLs to their direct download links before downloading. After downloading, updates the M3U file with local `file://` paths pointing to the downloaded files.
+This program downloads audio files specified in an M3U playlist. It takes an M3U file path as a command-line argument, optionally resolves `khinsider.com` URLs to direct download links, then downloads all files to a local folder.
 
 ## Shared State
 
-- `m3uFilePath` — path to the `.m3u` file being processed; updated after downloading to point to the new playlist inside the output folder.
-- `urls` — list of URLs parsed from the M3U file; updated after resolution and after downloading to reflect the current state of the playlist.
+- `m3uFilePath`: The path to the M3U file being processed.
+- `urls`: The list of URLs extracted from or written to the M3U file.
 
 ## Steps
 
 ### Check M3U File
-- This is the initial step.
-- Reads the file path from the first command-line argument. Validates that the argument is present, that the path ends in `.m3u`, and that the path points to an existing file.
-- If any check fails, prints an error and terminates. If valid, proceeds to `READ_M3U_FILE`.
+- This is the initial step of the application.
+- Reads the file path from the first command-line argument.
+- If no path is provided, or if the path does not have a `.m3u` extension, or if the file does not exist or is not a regular file, prints an error and terminates.
+- If valid, stores the path in state and proceeds to `READ_M3U_FILE`.
 
 ### Read M3U File
-- Reads the `.m3u` file at `m3uFilePath` and parses all non-comment, non-empty lines as URLs.
-- Prints the list of found URLs.
-- If any URL starts with `https://downloads.khinsider.com/game-soundtracks`, proceeds to `PROMPT_RESOLVE`. Otherwise, proceeds to `PROMPT_DOWNLOAD`.
+- Reads the M3U file at `state.m3uFilePath`.
+- Parses each line, ignoring empty lines and comment lines (starting with `#`).
+- Stores the extracted URLs in state and prints them.
+- If any URL starts with `https://downloads.khinsider.com/game-soundtracks`, proceeds to `PROMPT_RESOLVE`.
+- Otherwise, proceeds to `PROMPT_DOWNLOAD`.
 
 ### Prompt Resolve
-- Asks the user whether to resolve khinsider URLs to direct download links.
-- Loops until `y`/`yes` or `n`/`no` is entered. If the user answers no, terminates. If yes, proceeds to `RESOLVE_URLS`.
+- Displays: `Some URLs require resolution. Proceed? (y/n)`.
+- Loops until the user enters `y`/`yes` or `n`/`no`.
+- If `y`/`yes`, proceeds to `RESOLVE_URLS`.
+- If `n`/`no`, terminates.
 
-### Resolve Urls
-- Resolves all khinsider URLs in `urls` to their direct download links in parallel. Non-khinsider URLs are passed through unchanged.
-- Prints progress and completion. Proceeds to `SAVE_AFTER_RESOLVE`.
+### Resolve URLs
+- For each URL in state: if it is a khinsider URL, calls `resolveKhinsiderUrl` to obtain the direct download link; otherwise keeps it as-is.
+- All resolutions run in parallel.
+- Updates state with the resolved URLs and proceeds to `SAVE_M3U_FILE`.
 
-### Save After Resolve
-- Writes the current `urls` back to `m3uFilePath`, one URL per line.
-- Prints the saved file path and its contents. Proceeds to `PROMPT_DOWNLOAD`.
+### Save M3U File
+- Joins `state.urls` with newlines and overwrites `state.m3uFilePath`.
+- Prints the saved file path and the current URL list.
+- Proceeds to `onSuccess`, which is either `PROMPT_DOWNLOAD` (after resolve) or terminates (after download).
 
 ### Prompt Download
-- Asks the user whether to proceed with downloading the files.
-- Loops until `y`/`yes` or `n`/`no` is entered. If the user answers no, terminates. If yes, proceeds to `DOWNLOAD_FILES`.
+- Displays: `Proceed with download? (y/n)`.
+- Loops until the user enters `y`/`yes` or `n`/`no`.
+- If `y`/`yes`, proceeds to `DOWNLOAD_FILES`.
+- If `n`/`no`, terminates.
 
 ### Download Files
-- Downloads all files in `urls` in parallel into a folder named after the M3U file (without the `.m3u` extension).
-- Removes the original `.m3u` file after downloading.
-- Updates `m3uFilePath` to `<folder>/playlist.m3u` and `urls` to `file://`-prefixed absolute paths of the downloaded files. Proceeds to `SAVE_AFTER_DOWNLOAD`.
-
-### Save After Download
-- Writes the updated local `urls` back to the new `m3uFilePath` (`<folder>/playlist.m3u`), one path per line.
-- Prints the saved file path and its contents. Terminates.
+- Derives the output folder name from the M3U filename (without extension).
+- Downloads all URLs in `state.urls` to the output folder in parallel.
+- Removes the original M3U file.
+- Updates state with `m3uFilePath` set to `<outputFolder>/playlist.m3u` and `urls` replaced with `file://` URIs of the downloaded files.
+- Proceeds to `SAVE_M3U_FILE`, which saves the local playlist and then terminates.

@@ -1,54 +1,51 @@
-import { amble, node, Nextable } from "../ambler.ts";
-import * as CheckM3UFileNode from "../nodes/checkM3UFileNode.ts";
-import * as ReadM3UFileNode from "../nodes/readM3UFileNode.ts";
-import * as PromptResolveNode from "../nodes/promptResolveNode.ts";
-import * as ResolveUrlsNode from "../nodes/resolveUrlsNode.ts";
-import * as SaveM3UFileNode from "../nodes/saveM3UFileNode.ts";
-import * as PromptDownloadNode from "../nodes/promptDownloadNode.ts";
-import * as DownloadFilesNode from "../nodes/downloadFilesNode.ts";
+import { ambler } from "../ambler.ts";
+import { factory as checkM3UFileNode } from "../nodes/checkM3UFile.ts";
+import { factory as readM3UFileNode } from "../nodes/readM3UFile.ts";
+import { factory as promptResolveNode } from "../nodes/promptResolve.ts";
+import { factory as resolveUrlsNode } from "../nodes/resolveUrls.ts";
+import { factory as saveM3UFileNode } from "../nodes/saveM3UFile.ts";
+import { factory as promptDownloadNode } from "../nodes/promptDownload.ts";
+import { factory as downloadFilesNode } from "../nodes/downloadFiles.ts";
 
 export interface State {
   m3uFilePath: string;
   urls: string[];
 }
 
-const initialState: State = {
-  m3uFilePath: "",
-  urls: [],
-};
+type NodeId =
+  | "CHECK_M3U_FILE"
+  | "READ_M3U_FILE"
+  | "PROMPT_RESOLVE"
+  | "RESOLVE_URLS"
+  | "SAVE_AFTER_RESOLVE"
+  | "PROMPT_DOWNLOAD"
+  | "DOWNLOAD_FILES"
+  | "SAVE_AFTER_DOWNLOAD";
 
-const terminate: Nextable<State> = async () => null;
-
-const nodes: Record<string, Nextable<State>> = {
-  checkM3UFile: node(() =>
-    CheckM3UFileNode.create({ onSuccess: nodes.readM3UFile })
-  ),
-  readM3UFile: node(() =>
-    ReadM3UFileNode.create({
-      onHasKhinsider: nodes.promptResolve,
-      onNoKhinsider: nodes.promptDownload,
-    })
-  ),
-  promptResolve: node(() =>
-    PromptResolveNode.create({ onYes: nodes.resolveUrls })
-  ),
-  resolveUrls: node(() =>
-    ResolveUrlsNode.create({ onSuccess: nodes.saveAfterResolve })
-  ),
-  saveAfterResolve: node(() =>
-    SaveM3UFileNode.create({ onSuccess: nodes.promptDownload })
-  ),
-  promptDownload: node(() =>
-    PromptDownloadNode.create({ onYes: nodes.downloadFiles })
-  ),
-  downloadFiles: node(() =>
-    DownloadFilesNode.create({ onSuccess: nodes.saveAfterDownload })
-  ),
-  saveAfterDownload: node(() =>
-    SaveM3UFileNode.create({ onSuccess: terminate })
-  ),
-};
+const amble = ambler<State, NodeId>({
+  CHECK_M3U_FILE: () => checkM3UFileNode({ onSuccess: "READ_M3U_FILE" }),
+  READ_M3U_FILE: () =>
+    readM3UFileNode({
+      onHasKhinsider: "PROMPT_RESOLVE",
+      onNoKhinsider: "PROMPT_DOWNLOAD",
+    }),
+  PROMPT_RESOLVE: () => promptResolveNode({ onYes: "RESOLVE_URLS" }),
+  RESOLVE_URLS: () => resolveUrlsNode({ onSuccess: "SAVE_AFTER_RESOLVE" }),
+  SAVE_AFTER_RESOLVE: () => saveM3UFileNode({ onSuccess: "PROMPT_DOWNLOAD" }),
+  PROMPT_DOWNLOAD: () => promptDownloadNode({ onYes: "DOWNLOAD_FILES" }),
+  DOWNLOAD_FILES: () => downloadFilesNode({ onSuccess: "SAVE_AFTER_DOWNLOAD" }),
+  SAVE_AFTER_DOWNLOAD: () => saveM3UFileNode({ onSuccess: null }),
+});
 
 if (import.meta.main) {
-  await amble(nodes.checkM3UFile, initialState);
+  let nodeId: NodeId | null = "CHECK_M3U_FILE";
+  let state: State = {
+    m3uFilePath: "",
+    urls: [],
+  };
+
+  while (nodeId) {
+    const next = amble(nodeId, state);
+    [nodeId, state] = next instanceof Promise ? await next : next;
+  }
 }
